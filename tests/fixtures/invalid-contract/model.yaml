@@ -1,0 +1,28 @@
+schema_version: "1.0"
+compatibility:
+  model_lab: ">=0.1.0,<1.0.0"
+model:
+  id: invalid-contract
+  name: 非法契约模型
+  version: 0.1.0
+  lifecycle_state: draft
+  owner: model-lab
+target:
+  kind: cpu-iot
+contract:
+  inputs:
+    - name: flow_m3h
+      type: decimal
+      unit: m3/h
+  outputs:
+    - name: result
+      type: number
+      unit: dimensionless
+    - name: result
+      type: number
+      unit: dimensionless
+artifacts:
+  - name: reference-model
+    kind: model
+    uri: artifact://invalid-contract/model.bin
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"

@@ -1,0 +1,125 @@
+schema_version: "1.0"
+model_id: {{MODEL_ID_JSON}}
+owner: {{OWNER_JSON}}
+decisions:
+  - id: requirements-context
+    stage: requirements
+    blocks_transition: specified
+    level: ASK
+    required: true
+    question: "模型解决什么问题、由谁使用、多久执行一次，哪些事项不在范围内？"
+    recommendation: null
+    status: open
+    answer: null
+    confirmed_by: null
+    confirmed_at: null
+    evidence: "model-spec.md#1-需求"
+  - id: requirements-io-contract
+    stage: requirements
+    blocks_transition: specified
+    level: ASK
+    required: true
+    question: "模型输入和输出分别是什么，它们的类型、单位和业务含义是什么？"
+    recommendation: null
+    status: open
+    answer: null
+    confirmed_by: null
+    confirmed_at: null
+    evidence: "model.yaml#contract"
+  - id: requirements-acceptance
+    stage: requirements
+    blocks_transition: specified
+    level: CONFIRM
+    required: true
+    question: "哪些可验证条件满足后，模型才算达到业务验收标准？"
+    recommendation: null
+    status: open
+    answer: null
+    confirmed_by: null
+    confirmed_at: null
+    evidence: "model-spec.md#可验证的验收标准"
+  - id: design-model-logic
+    stage: design
+    blocks_transition: specified
+    level: CONFIRM
+    required: true
+    question: "采用哪套公式或模型逻辑，为什么适合当前业务问题？"
+    recommendation: null
+    status: open
+    answer: null
+    confirmed_by: null
+    confirmed_at: null
+    evidence: "model-spec.md#公式或模型逻辑"
+  - id: design-parameters-measurements
+    stage: design
+    blocks_transition: specified
+    level: CONFIRM
+    required: true
+    question: "参数、单位、来源、可调性以及测点和数据口径是否已经确定？"
+    recommendation: null
+    status: open
+    answer: null
+    confirmed_by: null
+    confirmed_at: null
+    evidence: "model-spec.md#参数、单位、来源与可调性"
+  - id: design-exception-strategy
+    stage: design
+    blocks_transition: specified
+    level: CONFIRM
+    required: true
+    question: "缺失值、异常值和业务边界应采用什么处理策略？"
+    recommendation: null
+    status: open
+    answer: null
+    confirmed_by: null
+    confirmed_at: null
+    evidence: "model-spec.md#缺失、异常和边界策略"
+  - id: build-data-quality-treatment
+    stage: build
+    blocks_transition: built
+    level: CONFIRM
+    required: true
+    question: "是否接受当前数据质量结论以及异常数据的处理方式？"
+    recommendation: null
+    status: open
+    answer: null
+    confirmed_by: null
+    confirmed_at: null
+    evidence: "model-spec.md#数据质量结论"
+  - id: validation-outcome
+    stage: validation
+    blocks_transition: validated
+    level: CONFIRM
+    required: true
+    question: "是否接受当前验证指标、结果可视化和行为基线结论？"
+    recommendation: null
+    status: open
+    answer: null
+    confirmed_by: null
+    confirmed_at: null
+    evidence: "validation/validation-report.md"
+  - id: release-deployment-plan
+    stage: release
+    blocks_transition: releasable
+    level: CONFIRM
+    required: true
+    question: "模型版本、目标环境、部署步骤和发布包边界是否已经确定？"
+    recommendation: null
+    status: open
+    answer: null
+    confirmed_by: null
+    confirmed_at: null
+    evidence: "model-spec.md#部署计划"
+  - id: release-rollback-plan
+    stage: release
+    blocks_transition: releasable
+    level: CONFIRM
+    required: true
+    question: "部署失败或行为异常时，采用什么回滚条件和回滚版本？"
+    recommendation: null
+    status: open
+    answer: null
+    confirmed_by: null
+    confirmed_at: null
+    evidence: "model-spec.md#回滚计划"
+{{TARGET_DECISIONS_BLOCK}}

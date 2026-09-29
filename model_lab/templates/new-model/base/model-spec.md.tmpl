@@ -1,0 +1,81 @@
+# {{MODEL_NAME_MD}} · 模型规格与证据
+
+模型 ID：`{{MODEL_ID}}`
+部署目标：`{{TARGET_KIND}}`
+
+本文只保存业务理由和阶段证据。身份、版本、生命周期、输入输出契约及制品
+记录以 `model.yaml` 为唯一事实源；问题、推荐、最终答案、确认人和确认时间记录
+在 `decisions.yaml`，本文不复制确认状态。
+
+## 1. 需求
+
+### 一句话用途
+
+<!-- MODEL-LAB-TODO:purpose -->
+
+### 使用者
+
+<!-- MODEL-LAB-TODO:users -->
+
+### 执行频率
+
+<!-- MODEL-LAB-TODO:frequency -->
+
+### 范围与非目标
+
+<!-- MODEL-LAB-TODO:boundaries -->
+
+### 可验证的验收标准
+
+<!-- MODEL-LAB-TODO:acceptance -->
+
+## 2. 设计
+
+### 公式或模型逻辑
+
+<!-- MODEL-LAB-TODO:formula -->
+
+### 参数、单位、来源与可调性
+
+<!-- MODEL-LAB-TODO:parameters -->
+
+### 测点及数据口径
+
+<!-- MODEL-LAB-TODO:measurements -->
+
+### 缺失、异常和边界策略
+
+<!-- MODEL-LAB-TODO:exception-strategy -->
+
+## 3. 构建
+
+### 数据质量结论
+
+<!-- MODEL-LAB-TODO:data-quality -->
+
+### 构建证据
+
+<!-- MODEL-LAB-TODO:build-evidence -->
+
+<!-- 记录源码、Notebook、测试、制品摘要、复现命令、退出码与输出摘要；不得写入长期凭据或原始大数据。 -->
+
+## 4. 验证
+
+详细数字与判断写入 `validation/validation-report.md`。行为基线按模型风险补充
+到 `baselines/`，并在 `model.yaml` 中登记摘要。
+
+## 5. 发布准备
+
+### 部署计划
+
+<!-- MODEL-LAB-TODO:deployment-plan -->
+
+### 回滚计划
+
+<!-- MODEL-LAB-TODO:rollback-plan -->
+
+## 6. 运营
+
+### 调度、监测、告警与后续维护
+
+<!-- MODEL-LAB-TODO:operations-plan -->

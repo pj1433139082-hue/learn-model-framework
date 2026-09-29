@@ -1,0 +1,16 @@
+# model-lab-template: new-model-v2
+schema_version: "1.0"
+compatibility:
+  model_lab: ">=0.1.0,<1.0.0"
+model:
+  id: {{MODEL_ID_JSON}}
+  name: {{MODEL_NAME_JSON}}
+  version: 0.1.0
+  lifecycle_state: draft
+  owner: {{OWNER_JSON}}
+{{TARGET_BLOCK}}
+contract:
+  inputs: []
+  outputs: []
+{{SERVING_BLOCK}}
+artifacts: []

@@ -1,0 +1,24 @@
+target:
+  kind: gpu
+  environment:
+    operating_system: {{ENVIRONMENT_OPERATING_SYSTEM_JSON}}
+    architecture: {{ENVIRONMENT_ARCHITECTURE_JSON}}
+    python: {{ENVIRONMENT_PYTHON_JSON}}
+    mlflow: {{ENVIRONMENT_MLFLOW_JSON}}
+    package_format: mlflow-pyfunc
+    dependency_lock: runtime/requirements.lock.txt
+    native_runtime:
+      kind: none
+  runtime:
+    accelerator: gpu
+    gpu:
+      vendor: nvidia
+      compute_capability: {{GPU_COMPUTE_CAPABILITY_JSON}}
+      memory_gb_min: {{GPU_MEMORY_GB_MIN}}
+    cuda:
+      version: {{CUDA_VERSION_JSON}}
+    framework:
+      name: {{FRAMEWORK_NAME_JSON}}
+      version: {{FRAMEWORK_VERSION_JSON}}
+    artifact:
+      format: {{ARTIFACT_FORMAT_JSON}}

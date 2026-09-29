@@ -1,0 +1,25 @@
+schema_version: "1.0"
+compatibility:
+  model_lab: ">=0.1.0,<1.0.0"
+model:
+  id: unicode-version
+  name: Unicode 数字版本模型
+  version: 1.2٢.3
+  lifecycle_state: draft
+  owner: model-lab
+target:
+  kind: cpu-iot
+contract:
+  inputs:
+    - name: flow_m3h
+      type: number
+      unit: m3/h
+  outputs:
+    - name: result
+      type: number
+      unit: dimensionless
+artifacts:
+  - name: reference-model
+    kind: model
+    uri: artifact://unicode-version/model.bin
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"

@@ -1,0 +1,14 @@
+schema_version: "1.0"
+compatibility: []
+model:
+  id: malformed-shapes
+  name: 结构错误模型
+  version: 0.1.0
+  lifecycle_state: draft
+  owner: model-lab
+target: cpu-iot
+contract:
+  inputs: {}
+  outputs:
+    - 42
+artifacts: {}

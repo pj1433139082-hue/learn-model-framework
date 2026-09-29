@@ -1,0 +1,38 @@
+schema_version: "1.0"
+compatibility:
+  model_lab: ">=0.1.0,<1.0.0"
+model:
+  id: minimal-chronos
+  name: 最小 Chronos 参考模型
+  version: 0.1.0
+  lifecycle_state: validated
+  owner: model-lab
+target:
+  kind: chronos
+  runtime:
+    accelerator: gpu
+    gpu:
+      vendor: nvidia
+      compute_capability: ">=8.0"
+      memory_gb_min: 16
+    cuda:
+      version: ">=12.1,<13.0"
+    framework:
+      name: pytorch
+      version: ">=2.3,<3.0"
+    artifact:
+      format: safetensors
+contract:
+  inputs:
+    - name: context_value
+      type: number
+      unit: dimensionless
+  outputs:
+    - name: forecast_value
+      type: number
+      unit: dimensionless
+artifacts:
+  - name: chronos-weights
+    kind: model
+    uri: artifact://minimal-chronos/weights.safetensors
+    sha256: "2222222222222222222222222222222222222222222222222222222222222222"

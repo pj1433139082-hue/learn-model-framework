@@ -1,0 +1,25 @@
+schema_version: "1.0"
+compatibility:
+  model_lab: ">=0.1.0,<1.0.0"
+model:
+  id: minimal-reference
+  name: 最小参考模型
+  version: 0.1.0
+  lifecycle_state: validated
+  owner: model-lab
+target:
+  kind: cpu-iot
+contract:
+  inputs:
+    - name: flow_m3h
+      type: number
+      unit: m3/h
+  outputs:
+    - name: result
+      type: number
+      unit: dimensionless
+artifacts:
+  - name: reference-model
+    kind: model
+    uri: artifact://minimal-reference/model.bin
+    sha256: "1111111111111111111111111111111111111111111111111111111111111111"

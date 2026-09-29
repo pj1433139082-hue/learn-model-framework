@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "model-lab-framework"
+dynamic = ["version"]
+description = "Reusable Python 3.11 model laboratory workflow and templates"
+requires-python = ">=3.11,<3.12"
+dependencies = ["packaging>=24,<26", "PyYAML>=6,<7"]
+
+[project.optional-dependencies]
+test = [
+  "mlflow==2.22.2",
+  "cloudpickle==3.1.2",
+  "numpy==2.3.3",
+  "pandas==2.3.3",
+]
+publish = ["boto3==1.43.103"]
+
+[project.scripts]
+model-lab = "model_lab.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["model_lab*"]
+
+[tool.setuptools.package-data]
+model_lab = [
+  "templates/new-model/base/*.tmpl",
+  "templates/new-model/base/*/*.tmpl",
+  "templates/new-model/targets/*.tmpl",
+  "workflows/*.yaml",
+]
+
+[tool.setuptools.dynamic]
+version = {attr = "model_lab.__version__"}

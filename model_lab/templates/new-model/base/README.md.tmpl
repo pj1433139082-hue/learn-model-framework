@@ -1,0 +1,36 @@
+# {{MODEL_NAME_MD}}
+
+这是模型 `{{MODEL_ID}}` 的草稿模型工作区，目标为 `{{TARGET_KIND}}`。
+
+## 唯一事实源
+
+- 身份、契约、目标、版本和生命周期：`model.yaml`
+- 脚手架模板与工作流版本：`model-lab.yaml`
+- 待回答问题、推荐和确认链：`decisions.yaml`
+- 业务需求、设计依据与各阶段证据：`model-spec.md`
+- 固定阶段说明：`CHECKLIST.md`
+
+不要把本目录直接复制到在役模型目录，也不要手工把生命周期改为
+`released`。使用以下入口查看并推进一个阶段：
+
+```powershell
+python -m model_lab status .
+python -m model_lab advance .
+python -m model_lab advance . --apply
+```
+
+`advance` 只允许在全部门禁通过后推进一步；`releasable → released` 必须走
+独立发布授权与不可变快照流程，脚手架不会执行远端写入。
+固定实包 `publish --apply` 若回执成功、同一 `service` 回载与平台路径预测通过，
+即可报告 MLflow 发布成功；本地 `releasable` 只是尚未完成快照归档，不表示
+上传失败。业务平台任务调用和生产调度不是上传的附加门禁；一次性任务可以
+明确不启用调度。
+
+`decisions.yaml` 只保存 `ASK` 和 `CONFIRM`。Git 远端操作和真实发布需要
+针对目标实验和制品的明确事务授权，不能保存为长期许可；
+本地创建、构建和门禁推进由已交办的单模型任务覆盖，不逐步重复询问。
+
+如果创建时选择了 `--serving-mode point-code`，还须按
+框架仓库中的 `docs/00-入口层/05-数采测点模型从零示例.md` 填写 `model.yaml` 的 `serving`、
+`input-bindings.yaml`、公司 3.11 provider 和显式时间规则；模板中的空值是
+待调查项，不是默认业务参数。默认 `numeric` 不需要测点绑定文件。

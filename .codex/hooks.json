@@ -1,0 +1,32 @@
+{
+  "description": "Read-only model workflow context with an AGENTS.md/CLI fallback",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'root=\"$(git rev-parse --show-toplevel)\"; exec sh \"$root/.codex/hooks/run_context.sh\"'",
+            "commandWindows": "pwsh -NoProfile -Command \"& (Join-Path (git rev-parse --show-toplevel) '.codex/hooks/run_context.ps1')\"",
+            "timeout": 20,
+            "additionalContextLimit": 900
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'root=\"$(git rev-parse --show-toplevel)\"; exec sh \"$root/.codex/hooks/run_context.sh\"'",
+            "commandWindows": "pwsh -NoProfile -Command \"& (Join-Path (git rev-parse --show-toplevel) '.codex/hooks/run_context.ps1')\"",
+            "timeout": 20,
+            "additionalContextLimit": 900
+          }
+        ]
+      }
+    ]
+  }
+}

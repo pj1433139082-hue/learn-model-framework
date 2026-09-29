@@ -1,0 +1,19 @@
+# 运行环境
+
+本工作区使用 `{{RUNTIME_PROFILE_ID}}`。`model.yaml` 中的
+`target.environment` 是目标环境契约，`requirements.lock.txt` 是部署包必须复用的
+基础依赖锁。
+
+模型专属依赖必须使用 `package==version` 形式补入锁文件。请在与目标操作系统、
+架构和 Python 版本一致的构建环境中生成 `release-bundle/service/`，不要复制本机
+`python.exe`、`.venv`、`.pyd` 或 `.so` 作为跨平台替代品。
+
+CPU-IoT 单文件模型可用 `model-lab bundle-build model.yaml --sample-csv <本地CSV>`
+先预览，再用 `--apply` 构建；构建后运行 `bundle-preflight`。此命令只构建本地
+MLflow 包，不上传或注册公司平台。GPU/Chronos 需专用构建路径。
+
+如果本模型是 `point-code`，还必须从经核验的公司 3.11 ZIP 填写 `model.yaml`
+中的 provider 摘要与 Linux 原生库契约，并在构建命令加入
+`--iot-package-zip <经核验的公司3.11包.zip>`。只有算法数值样本 CSV 还不够；
+不允许以 mock 取代正式包。完整填写示例见
+框架仓库中的 `docs/00-入口层/05-数采测点模型从零示例.md`。

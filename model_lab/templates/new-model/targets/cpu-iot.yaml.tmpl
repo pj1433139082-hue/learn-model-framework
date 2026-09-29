@@ -1,0 +1,11 @@
+target:
+  kind: cpu-iot
+  environment:
+    operating_system: {{ENVIRONMENT_OPERATING_SYSTEM_JSON}}
+    architecture: {{ENVIRONMENT_ARCHITECTURE_JSON}}
+    python: {{ENVIRONMENT_PYTHON_JSON}}
+    mlflow: {{ENVIRONMENT_MLFLOW_JSON}}
+    package_format: mlflow-pyfunc
+    dependency_lock: runtime/requirements.lock.txt
+    native_runtime:
+      kind: none

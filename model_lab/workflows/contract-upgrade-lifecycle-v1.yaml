@@ -1,0 +1,94 @@
+schema_version: "1.0"
+states:
+  draft:
+    next: specified
+    gates:
+      - check: scaffold-metadata-valid
+      - check: workspace-safe
+      - check: manifest-valid
+      - check: runtime-contract-valid
+      - check: interaction-decisions-confirmed
+        transition: specified
+      - check: manifest-sections-present
+        paths: [serving]
+      - check: history-feature-adapter-ready
+      - check: manifest-list-non-empty
+        paths: [contract.inputs, contract.outputs]
+      - check: markdown-sections-complete
+        file: model-spec.md
+        sections:
+          - "### 在线契约升级"
+          - "### 历史窗口与特征行为"
+          - "### 父版行为基线"
+          - "### 风险与缺口"
+  specified:
+    next: built
+    gates:
+      - check: scaffold-metadata-valid
+      - check: workspace-safe
+      - check: manifest-valid
+      - check: runtime-contract-valid
+      - check: manifest-sections-present
+        paths: [serving, baseline]
+      - check: history-feature-adapter-ready
+      - check: manifest-list-non-empty
+        paths: [artifacts]
+      - check: artifact-digests-recorded
+      - check: paths-exist
+        paths: [src/model.py, notebooks/model.ipynb, tests/test_model.py]
+      - check: python-ready
+        file: src/model.py
+        required_functions: [predict]
+        forbidden_raises: [NotImplementedError]
+        require_non_none_return: true
+      - check: notebook-ready
+        file: notebooks/model.ipynb
+      - check: python-ready
+        file: tests/test_model.py
+        required_function_prefix: test_
+        forbidden_raises: [NotImplementedError, AssertionError]
+        require_assertion: true
+      - check: markdown-sections-complete
+        file: model-spec.md
+        sections: ["### 数据质量结论", "### 构建证据"]
+  built:
+    next: validated
+    gates:
+      - check: scaffold-metadata-valid
+      - check: workspace-safe
+      - check: manifest-valid
+      - check: runtime-contract-valid
+      - check: interaction-decisions-confirmed
+        transition: validated
+      - check: markdown-sections-complete
+        file: validation/validation-report.md
+        sections: ["## 契约与数据质量", "## 结果可视化审查"]
+  validated:
+    next: releasable
+    gates:
+      - check: scaffold-metadata-valid
+      - check: workspace-safe
+      - check: manifest-valid
+      - check: runtime-contract-valid
+      - check: interaction-decisions-confirmed
+        transition: releasable
+      - check: manifest-sections-present
+        paths: [source, serving, baseline]
+      - check: artifacts-resolved
+      - check: mlflow-bundle-valid
+      - check: markdown-sections-complete
+        file: model-spec.md
+        sections: ["### 部署计划", "### 回滚计划", "### 调度、监测、告警与后续维护"]
+  releasable:
+    next: released
+    manual: true
+    gates:
+      - check: scaffold-metadata-valid
+      - check: workspace-safe
+  released:
+    next: retired
+    manual: true
+    gates: []
+  retired:
+    next:
+    gates: []

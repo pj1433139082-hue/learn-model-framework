@@ -1,0 +1,13 @@
+"""单模型业务实现；bundle-build 只打包本文件，不扫描项目其他源码。"""
+
+from __future__ import annotations
+
+
+def predict(inputs: object) -> object:
+    """接收 pandas DataFrame，返回与 model.yaml 输出列一致的 DataFrame。
+
+    一行输入对应一行输出；不要在模块导入时访问网络或读取凭据。
+    """
+
+    # MODEL-LAB-TODO:implementation
+    raise NotImplementedError("implement the frozen model contract")

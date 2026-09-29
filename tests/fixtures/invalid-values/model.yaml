@@ -1,0 +1,18 @@
+schema_version: "1.0"
+compatibility:
+  model_lab: ">=0.1.0,<1.0.0"
+model:
+  id: []
+  name: null
+  version: 0.1.0
+  lifecycle_state: draft
+  owner: {}
+target:
+  kind: cpu-iot
+contract:
+  inputs:
+    - name: null
+      type: number
+      unit: {}
+  outputs: null
+artifacts: null

@@ -1,0 +1,13 @@
+# Fill every model-specific field before validation; no global time or point defaults.
+serving:
+  mode: point-code
+  factory_field: null
+  point_fields: []
+  start_field: null
+  time:
+    strategy: null
+    timezone: null
+    iot_timestamp_timezone: null
+  rolling_window: null
+  interval: null
+  binding: input-bindings.yaml

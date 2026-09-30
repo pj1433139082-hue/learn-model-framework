@@ -130,7 +130,8 @@ class PrivacyGateTests(unittest.TestCase):
             notes.write_text("main change\n", encoding="utf-8")
             _git(root, "add", "docs/notes.md")
             _commit(root, "main change")
-            _git(root, "merge", "--no-commit", "--no-ff", "side")
+            _git(root, "-c", "user.name=Example", "-c", "user.email=example@example.invalid",
+                 "merge", "--no-commit", "--no-ff", "side")
 
             hidden = root / "models" / "private" / "model.yaml"
             hidden.parent.mkdir(parents=True)

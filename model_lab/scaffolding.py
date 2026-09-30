@@ -18,6 +18,7 @@ from packaging.specifiers import InvalidSpecifier, SpecifierSet
 import yaml  # type: ignore[import-untyped]
 
 from model_lab.manifest import ManifestError, validate_manifest
+from model_lab.environment import framework_identity
 from model_lab.path_safety import is_link_or_junction
 from model_lab.runtime_contract import (
     ACTIVE_RUNTIME_PROFILE_IDS,
@@ -396,10 +397,14 @@ def _render(template: str, values: dict[str, str], source: str) -> str:
 
 
 def _render_files(request: _NormalizedRequest) -> dict[PurePosixPath, str]:
+    framework = framework_identity()
     values = {
         "MODEL_ID": request.model_id,
         "MODEL_ID_PY": request.model_id.replace("-", "_"),
         "MODEL_ID_JSON": _json_scalar(request.model_id),
+        "MODEL_LAB_VERSION_JSON": _json_scalar(framework["version"]),
+        "MODEL_LAB_COMMIT_JSON": _json_scalar(framework["git_commit"]),
+        "MODEL_LAB_DIRTY_JSON": _json_scalar(framework["git_dirty"]),
         "MODEL_NAME_MD": html.escape(request.name, quote=True),
         "MODEL_NAME_JSON": _json_scalar(request.name),
         "NOTEBOOK_SOURCE_JSON": _json_scalar(

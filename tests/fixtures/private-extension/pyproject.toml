@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=65"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "synthetic-private-baseline-example"
+version = "0.1.0"
+description = "Synthetic example of a private model-lab baseline extension"
+requires-python = ">=3.11,<3.12"
+
+[project.entry-points."model_lab.baseline_runners"]
+synthetic-sum-v1 = "synthetic_private_baseline.baseline:RUNNER"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["synthetic_private_baseline*"]
+
+[tool.setuptools.package-data]
+synthetic_private_baseline = ["examples/*.json"]

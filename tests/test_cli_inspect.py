@@ -7,6 +7,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from model_lab import __version__
+
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 MINIMAL_MANIFEST = REPO_ROOT / "tests" / "fixtures" / "minimal-model" / "model.yaml"
@@ -317,7 +319,7 @@ class ValidateCommandTests(unittest.TestCase):
             },
         )
         self.assertTrue(
-            any("0.1.0" in issue["message"] for issue in issues)
+            any(__version__ in issue["message"] for issue in issues)
         )
 
     def test_semantic_version_rejects_non_ascii_digits(self) -> None:

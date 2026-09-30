@@ -2,9 +2,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+import hashlib
+import os
 import platform
+import struct
 import sys
 import tomllib
+from zipfile import BadZipFile, ZipFile
+
+from model_lab.environment import framework_identity, read_local_settings
+from model_lab.path_safety import is_link_or_junction
 
 
 _ACTIVE_TEXT_SUFFIXES = frozenset(
@@ -59,6 +66,8 @@ class DoctorReport:
     repository_root: str
     observation: DoctorObservation
     checks: tuple[DoctorCheck, ...]
+    framework: dict[str, object]
+    deployment: dict[str, object]
 
     @property
     def valid(self) -> bool:
@@ -85,6 +94,8 @@ class DoctorReport:
                 "executable": self.observation.executable,
             },
             "checks": [check.as_dict() for check in self.checks],
+            "framework": self.framework,
+            "deployment": self.deployment,
             "safety": {"network_access": False, "remote_writes": False},
         }
 
@@ -94,14 +105,16 @@ class DoctorReport:
             f"model-lab doctor: {state}",
             f"Python: {self.observation.python}",
             f"Interpreter: {self.observation.executable}",
+            f"Framework source: {self.framework['module']}",
+            f"Framework: {self.framework['version']} | {self.framework['git_commit'] or 'unknown commit'} | dirty={self.framework.get('git_dirty')}",
         ]
         for check in self.checks:
             marker = "OK" if check.passed else ("ERROR" if check.required else "INFO")
             lines.append(f"[{marker}] {check.message}")
         if not self.deployment_capability_ready:
             lines.append(
-                "Company deployment capability is installed separately and is only "
-                "required before packaging or deployment."
+                "Company archive check is optional for framework use; packaging and "
+                "deployment check the model's archive and target separately."
             )
         return "\n".join(lines)
 
@@ -133,10 +146,70 @@ def _active_legacy_references(root: Path) -> tuple[str, ...]:
     return tuple(matches)
 
 
+def _external_capability(
+    root: Path, current: DoctorObservation, configured: str | Path | None,
+    target_platform: str | None,
+) -> tuple[bool, str, dict[str, object]]:
+    operating_system = platform.system().lower()
+    machine = platform.machine().lower()
+    if machine in {"amd64", "x64", "x86_64"}:
+        machine = "x86_64"
+    target = target_platform or f"{operating_system}_{machine}"
+    state: dict[str, object] = {"status": "not_configured", "target_platform": target,
+                                "network_access": False, "import_executed": False}
+    if configured is None:
+        try:
+            configured = os.environ.get("MODEL_LAB_COMPANY_IOT_ZIP") or read_local_settings(root).get("company_iot_zip")
+        except (OSError, ValueError):
+            state["status"] = "configuration_invalid"
+            return False, "private local configuration could not be read", state
+    if not configured:
+        return False, "company archive not configured; framework use remains available", state
+    archive = Path(configured).expanduser().absolute()
+    state["status"] = "invalid"
+    state["archive"] = str(archive)
+    suffix = ".so" if target == "linux_x86_64" else ".pyd" if target == "windows_x86_64" else None
+    if current.minor != "3.11" or suffix is None:
+        return False, "company archive check requires Python 3.11 and a supported target platform", state
+    if (archive.resolve().is_relative_to(root) or not archive.is_file()
+            or any(is_link_or_junction(p) for p in (archive, *archive.parents))
+            or archive.stat().st_size > 16 * 1024 * 1024):
+        return False, "company archive must be a bounded regular file outside the framework", state
+    prefix = "infra_model_deploy/resources/infra/311/"
+    entries = (prefix + "mlops_deploy_iot_armor2_311.py",
+               prefix + "pyarmor_runtime_000000/__init__.py",
+               prefix + f"pyarmor_runtime_000000/{target}/pyarmor_runtime{suffix}")
+    try:
+        with ZipFile(archive) as bundle:
+            names = bundle.namelist()
+            if len(names) != len(set(names)):
+                return False, "company archive contains duplicate entries", state
+            contents: list[bytes] = []
+            for name in entries:
+                info = bundle.getinfo(name)
+                if info.is_dir() or info.file_size > 2 * 1024 * 1024:
+                    return False, "company archive component is invalid or too large", state
+                contents.append(bundle.read(info))
+    except (BadZipFile, OSError, KeyError, RuntimeError, ValueError):
+        return False, "company archive is invalid or lacks the requested target runtime", state
+    native = contents[-1]
+    if target == "linux_x86_64":
+        native_valid = (len(native) >= 20 and native[:6] == b"\x7fELF\x02\x01"
+                        and struct.unpack_from("<H", native, 18)[0] == 62)
+    else:
+        native_valid = native.startswith(b"MZ")
+    if not native_valid:
+        return False, "company archive native file does not match the requested platform format", state
+    state.update(status="files_verified", archive_sha256=hashlib.sha256(archive.read_bytes()).hexdigest())
+    return True, "external archive files match the target; model digests, import and connectivity still need model checks", state
+
+
 def run_repository_doctor(
     repository_root: str | Path,
     *,
     observation: DoctorObservation | None = None,
+    company_package: str | Path | None = None,
+    target_platform: str | None = None,
 ) -> DoctorReport:
     root = Path(repository_root).resolve()
     current = observation or DoctorObservation.current()
@@ -259,43 +332,14 @@ def run_repository_doctor(
         )
     )
 
-    capability_module = root / "framework" / "mlops_deploy_iot_armor2_311.py"
-    runtime_root = root / "framework" / "pyarmor_runtime_000000"
-    operating_system = platform.system().lower()
-    machine = platform.machine().lower()
-    if machine in {"amd64", "x64", "x86_64"}:
-        machine = "x86_64"
-    native_suffix = {"windows": ".pyd", "linux": ".so"}.get(operating_system)
-    native_magic = {"windows": b"MZ", "linux": b"\x7fELF"}.get(operating_system)
-    native_runtime = (
-        runtime_root
-        / f"{operating_system}_{machine}"
-        / f"pyarmor_runtime{native_suffix}"
-        if native_suffix
-        else None
-    )
-    native_present = False
-    if native_runtime is not None and native_magic is not None:
-        try:
-            with native_runtime.open("rb") as native_file:
-                native_present = native_file.read(len(native_magic)) == native_magic
-        except OSError:
-            pass
-    capability_ready = (
-        current.minor == "3.11"
-        and capability_module.is_file()
-        and (runtime_root / "__init__.py").is_file()
-        and native_present
+    capability_ready, capability_message, deployment = _external_capability(
+        root, current, company_package, target_platform,
     )
     checks.append(
         DoctorCheck(
             "deployment_capability_missing",
             capability_ready,
-            (
-                "external Python 3.11 deployment files match this platform; import and company connectivity still require separate tests"
-                if capability_ready
-                else "external Python 3.11 deployment files for this platform are missing or invalid"
-            ),
+            capability_message,
             required=False,
         )
     )
@@ -304,6 +348,8 @@ def run_repository_doctor(
         repository_root=str(root),
         observation=current,
         checks=tuple(checks),
+        framework=framework_identity(),
+        deployment=deployment,
     )
 
 

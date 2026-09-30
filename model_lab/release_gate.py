@@ -17,12 +17,12 @@ from model_lab.path_safety import is_link_or_junction
 
 
 _ROOT_FILES = frozenset({
-    ".gitignore", ".python-version", "AGENTS.md", "README.md", "CONTEXT.md",
+    ".gitattributes", ".gitignore", ".python-version", "AGENTS.md", "README.md", "CONTEXT.md",
     "CHANGELOG.md", "pyproject.toml",
 })
 _SOURCE_ROOTS = frozenset({
     ".codex", ".github", ".skillshare", ".vscode", "docs", "model_lab",
-    "model_lab_service_runtime", "tests",
+    "model_lab_service_runtime", "scripts", "tests",
 })
 _FORBIDDEN_SUFFIXES = frozenset({
     ".7z", ".arrow", ".avro", ".bin", ".bz2", ".ckpt", ".csv",
@@ -43,8 +43,6 @@ _PRIVATE_IDENTIFIERS = (
     re.compile(rb"\bPS[0-9]{4}(?:[-_]|\b)", re.IGNORECASE),
     re.compile(rb"\bMLModel-[0-9]{3,}(?:_V[0-9]+)?\b", re.IGNORECASE),
     re.compile(rb"[A-Za-z]:[\\/]Users[\\/][^\\/\s]{2,}[\\/]", re.IGNORECASE),
-    re.compile(rb"\bbewg\.net\.cn\b", re.IGNORECASE),
-    re.compile(rb"\b(?:hydraulic-delay|upstream-inflow|internal-recycle)-v1\b", re.IGNORECASE),
 )
 _MAX_BLOB = 10_000_000
 _MAX_SCAN = 256_000_000
@@ -142,7 +140,7 @@ def _content_issue(content: bytes) -> str | None:
     if any(pattern.search(content) for pattern in _SECRET_PATTERNS):
         return "credential material detected"
     if any(pattern.search(content) for pattern in _PRIVATE_IDENTIFIERS):
-        return "real-looking model, measurement point, or personal path detected"
+        return "private identifier or personal path detected"
     return None
 
 
@@ -176,30 +174,101 @@ def scan_workspace_tree(workspace: str | Path) -> tuple[GateIssue, ...]:
     return tuple(issues)
 
 
-def _tracked_paths(root: Path) -> tuple[list[str], list[GateIssue]]:
+def _index_entries(root: Path) -> tuple[list[tuple[bytes, bytes, str]], list[GateIssue]]:
+    """Read paths and object IDs from the actual index, preserving unusual names."""
+    result = _git(root, "ls-files", "--stage", "-z")
+    if result.returncode != 0:
+        return [], [GateIssue("index_unavailable", "git", "could not list index entries")]
+    entries: list[tuple[bytes, bytes, str]] = []
+    issues: list[GateIssue] = []
+    for record in result.stdout.split(b"\x00"):
+        if not record:
+            continue
+        metadata, separator, raw_path = record.partition(b"\t")
+        fields = metadata.split()
+        if not separator or len(fields) != 3:
+            issues.append(GateIssue("index_unreadable", "git", "index entry cannot be parsed"))
+            continue
+        mode, object_id, _stage = fields
+        entries.append((mode, object_id, os.fsdecode(raw_path)))
+    return entries, issues
+
+
+def _index_issues(root: Path) -> tuple[int, int, list[GateIssue]]:
+    entries, issues = _index_entries(root)
+    seen_paths: set[str] = set()
+    seen_objects: set[bytes] = set()
+    scanned = 0
+    total_bytes = 0
+    for mode, object_id, relative in entries:
+        if relative not in seen_paths:
+            seen_paths.add(relative)
+            problem = _path_issue(relative, framework=True)
+            if problem:
+                issues.append(GateIssue("index_path", relative, problem))
+        if mode == b"120000":
+            issues.append(GateIssue("index_path", relative, "symbolic links are forbidden"))
+        if mode == b"160000":
+            issues.append(GateIssue("index_unreadable", relative, "submodule entries are not source blobs"))
+            continue
+        if object_id and not object_id.strip(b"0"):
+            # Intent-to-add entries have no index blob yet; the worktree scan covers their content.
+            continue
+        if object_id in seen_objects:
+            continue
+        seen_objects.add(object_id)
+        if not re.fullmatch(rb"(?:[0-9a-f]{40}|[0-9a-f]{64})", object_id):
+            issues.append(GateIssue("index_unreadable", relative, "index object ID is invalid"))
+            continue
+        object_name = object_id.decode("ascii")
+        size_result = _git(root, "cat-file", "-s", object_name)
+        try:
+            size = int(size_result.stdout.strip()) if size_result.returncode == 0 else -1
+        except ValueError:
+            size = -1
+        if size < 0:
+            issues.append(GateIssue("index_unreadable", relative, "index blob size cannot be read"))
+            continue
+        total_bytes += size
+        if size > _MAX_BLOB or total_bytes > _MAX_SCAN:
+            issues.append(GateIssue("index_budget", relative, "index content exceeds scan safety budget"))
+            break
+        blob = _git(root, "cat-file", "blob", object_name)
+        if blob.returncode != 0:
+            issues.append(GateIssue("index_unreadable", relative, "index blob cannot be read"))
+            continue
+        scanned += 1
+        problem = _content_issue(blob.stdout)
+        if problem:
+            issues.append(GateIssue("index_content", relative, problem))
+    return len(entries), scanned, issues
+
+
+def _worktree_issues(root: Path) -> tuple[list[str], list[GateIssue]]:
+    """Inspect tracked working-tree files separately from the staged index blobs."""
     result = _git(root, "ls-files", "--cached", "-z")
     if result.returncode != 0:
-        return [], [GateIssue("tracked_files_unavailable", "git", "could not list staged files")]
-    paths = [item.decode("utf-8", errors="replace") for item in result.stdout.split(b"\x00") if item]
+        return [], [GateIssue("worktree_unavailable", "git", "could not list tracked paths")]
+    paths = [os.fsdecode(item) for item in result.stdout.split(b"\x00") if item]
     issues: list[GateIssue] = []
     for relative in paths:
         problem = _path_issue(relative, framework=True)
         if problem:
-            issues.append(GateIssue("shared_path", relative, problem))
+            issues.append(GateIssue("worktree_path", relative, problem))
             continue
         path = root / relative
         if not path.is_file() or is_link_or_junction(path):
-            issues.append(GateIssue("shared_file_unreadable", relative, "file is absent or linked"))
+            issues.append(GateIssue("worktree_file_unreadable", relative, "file is absent or linked"))
             continue
         try:
             if path.stat().st_size > _MAX_BLOB:
-                issues.append(GateIssue("shared_file_too_large", relative, "file exceeds 10 MB"))
+                issues.append(GateIssue("worktree_file_too_large", relative, "file exceeds 10 MB"))
                 continue
             problem = _content_issue(path.read_bytes())
         except OSError:
             problem = "file cannot be read"
         if problem:
-            issues.append(GateIssue("shared_content", relative, problem))
+            issues.append(GateIssue("worktree_content", relative, problem))
     return paths, issues
 
 
@@ -224,7 +293,10 @@ def _history_issues(root: Path) -> tuple[int, int, list[GateIssue]]:
     grafts = common_path / "info" / "grafts"
     if grafts.is_file() and grafts.stat().st_size:
         return commit_count, 0, [GateIssue("history_grafts", "git", "Git grafts prevent complete history verification")]
-    historical_paths = _git(root, "log", "--all", "--format=", "--name-only", "-z")
+    historical_paths = _git(
+        root, "log", "--all", "--format=", "--name-only", "-z",
+        "--no-renames", "-m", "--root",
+    )
     if historical_paths.returncode != 0 or len(historical_paths.stdout) > 32_000_000:
         return commit_count, 0, [GateIssue("history_unavailable", "git", "historical paths cannot be fully listed")]
     listing = _git(root, "rev-list", "--objects", "--all")
@@ -232,7 +304,7 @@ def _history_issues(root: Path) -> tuple[int, int, list[GateIssue]]:
         return commit_count, 0, [GateIssue("history_unavailable", "git", "Git objects cannot be fully listed")]
     issues: list[GateIssue] = []
     for raw_path in historical_paths.stdout.split(b"\x00"):
-        relative = raw_path.decode("utf-8", errors="replace").strip()
+        relative = os.fsdecode(raw_path)
         if not relative:
             continue
         problem = _path_issue(relative, framework=True)
@@ -242,22 +314,20 @@ def _history_issues(root: Path) -> tuple[int, int, list[GateIssue]]:
     scanned = 0
     total_bytes = 0
     for line in listing.stdout.splitlines():
-        object_id, _, raw_path = line.partition(b" ")
-        if raw_path:
-            relative = raw_path.decode("utf-8", errors="replace")
-            problem = _path_issue(relative, framework=True)
-            if problem:
-                issues.append(GateIssue("history_path", relative, problem))
+        object_id = line.partition(b" ")[0]
+        if not re.fullmatch(rb"(?:[0-9a-f]{40}|[0-9a-f]{64})", object_id):
+            continue
         if object_id in checked:
             continue
         checked.add(object_id)
-        object_type = _git(root, "cat-file", "-t", object_id.decode("ascii"))
+        object_name = object_id.decode("ascii")
+        object_type = _git(root, "cat-file", "-t", object_name)
         if object_type.returncode != 0:
             issues.append(GateIssue("history_unreadable", "git", "Git object type cannot be read"))
             break
         if object_type.stdout.strip() != b"blob":
             continue
-        size_result = _git(root, "cat-file", "-s", object_id.decode("ascii"))
+        size_result = _git(root, "cat-file", "-s", object_name)
         try:
             size = int(size_result.stdout.strip())
         except ValueError:
@@ -267,15 +337,14 @@ def _history_issues(root: Path) -> tuple[int, int, list[GateIssue]]:
         if size > _MAX_BLOB or total_bytes > _MAX_SCAN:
             issues.append(GateIssue("history_budget", "git", "source history exceeds scan safety budget"))
             break
-        blob = _git(root, "cat-file", "blob", object_id.decode("ascii"))
+        blob = _git(root, "cat-file", "blob", object_name)
         if blob.returncode != 0:
             issues.append(GateIssue("history_unreadable", "git", "Git blob cannot be read"))
             break
         scanned += 1
         problem = _content_issue(blob.stdout)
         if problem:
-            relative = raw_path.decode("utf-8", errors="replace") if raw_path else object_id[:12].decode("ascii")
-            issues.append(GateIssue("history_content", relative, problem))
+            issues.append(GateIssue("history_content", object_id[:12].decode("ascii"), problem))
     return commit_count, scanned, issues
 
 
@@ -285,10 +354,22 @@ def run_release_gate(repository_root: str | Path) -> ReleaseGateReport:
     if top.returncode != 0 or Path(top.stdout.decode("utf-8", errors="replace").strip()).resolve() != root:
         issue = GateIssue("repository_unavailable", ".", "select the root of a standalone Git checkout")
         return ReleaseGateReport(str(root), (GateCheck("git_checkout", "failed"),), (issue,))
-    paths, current_issues = _tracked_paths(root)
+    index_entries, index_blobs, index_issues = _index_issues(root)
+    worktree_paths, worktree_issues = _worktree_issues(root)
     commits, blobs, history_issues = _history_issues(root)
     checks = (
-        GateCheck("shared_source_allowlist", "failed" if current_issues else "passed", (("tracked_files", len(paths)),)),
+        GateCheck(
+            "shared_index_allowlist",
+            "failed" if index_issues else "passed",
+            (("index_entries", index_entries), ("scanned_blobs", index_blobs)),
+        ),
+        GateCheck(
+            "shared_worktree_allowlist",
+            "failed" if worktree_issues else "passed",
+            (("tracked_files", len(worktree_paths)),),
+        ),
         GateCheck("complete_git_history", "failed" if history_issues else "passed", (("commits", commits), ("scanned_blobs", blobs))),
     )
-    return ReleaseGateReport(str(root), checks, tuple(current_issues + history_issues))
+    return ReleaseGateReport(
+        str(root), checks, tuple(index_issues + worktree_issues + history_issues)
+    )

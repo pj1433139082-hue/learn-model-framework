@@ -201,6 +201,8 @@ def publish_fixed_bundle(
     company_package: str | Path,
 ) -> PublishExecutionResult:
     """Upload and reload the exact accepted service; never rebuild the model."""
+    from model_lab.environment import ensure_external_workspace
+    ensure_external_workspace(manifest_path)
     path = Path(manifest_path).resolve(strict=True)
     workspace = path.parent
     document = yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -355,6 +357,8 @@ def verify_existing_publication(
     company_package: str | Path,
 ) -> PublishExecutionResult:
     """Read an existing Run and its service; only write a local receipt after full verification."""
+    from model_lab.environment import ensure_external_workspace
+    ensure_external_workspace(manifest_path)
     path = Path(manifest_path).resolve(strict=True)
     workspace = path.parent
     document = yaml.safe_load(path.read_text(encoding="utf-8"))

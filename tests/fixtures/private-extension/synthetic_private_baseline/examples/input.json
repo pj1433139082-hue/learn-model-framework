@@ -1,0 +1,7 @@
+{
+  "cases": [
+    {"left": 5, "right": 7},
+    {"left": -2.5, "right": 0.5},
+    {"left": 0, "right": 0}
+  ]
+}

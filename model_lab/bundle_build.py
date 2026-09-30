@@ -22,6 +22,7 @@ from model_lab.path_safety import is_link_or_junction
 from model_lab.point_serving import parse_point_serving, parse_provider_spec
 from model_lab.provider_archive import ProviderArchiveError, read_provider_archive
 from model_lab.runtime_contract import check_build_environment, verify_mlflow_bundle
+from model_lab.environment import ensure_external_workspace
 
 
 _MAX_SOURCE_BYTES = 1024 * 1024
@@ -122,6 +123,11 @@ def build_bundle(
     manifest = Path(manifest_path)
     if manifest.is_dir():
         manifest /= "model.yaml"
+    if apply:
+        try:
+            ensure_external_workspace(manifest)
+        except ValueError as error:
+            raise BundleBuildError(getattr(error, "code", "unsafe_workspace_path"), str(error)) from error
     validation, asset = load_validated_asset(manifest)
     if asset is None:
         first = validation.issues[0]

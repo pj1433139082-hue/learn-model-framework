@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 from pathlib import Path
 import re
 import sys
@@ -14,6 +13,7 @@ from typing import Any
 import yaml  # type: ignore[import-untyped]
 
 from model_lab.workflow_state import model_manifests, task_context
+from model_lab.environment import configured_models_root
 
 
 def _session_file(repository_root: Path, session_id: str, cache_root: Path | None) -> Path:
@@ -25,10 +25,10 @@ def _session_file(repository_root: Path, session_id: str, cache_root: Path | Non
 
 def _models(repository_root: Path) -> list[dict[str, Any]]:
     entries: list[dict[str, Any]] = []
-    configured = os.environ.get("MODEL_LAB_MODELS_ROOT")
-    if not configured:
+    try:
+        models_root = configured_models_root()
+    except ValueError:
         return entries
-    models_root = Path(configured).expanduser().resolve()
     if models_root == repository_root or models_root.is_relative_to(repository_root):
         return entries
     for path in model_manifests(models_root):
@@ -149,11 +149,12 @@ def handle_event(event: dict[str, Any], repository_root: Path, *, cache_root: Pa
         model = snapshot["model"]
         publication = snapshot["publication"]
         assert isinstance(model, dict) and isinstance(publication, dict)
-        docs = ", ".join(str(item) for item in context["docs"])
+        docs = ", ".join(str(item) for item in context["doc_paths"])
         drift = "快照漂移：运行 model-lab context <工作区> --write；hook 不会自动改文件。" if not context["snapshot_in_sync"] else "快照一致。"
         detail = (
             f"本会话焦点：{selected['id']} {selected['version']}；本地阶段={model['lifecycle_state']}；"
             f"仓库发布记录={publication['status']}（不是实时平台状态）。{drift} "
+            f"框架来源：{context['framework']['root']}；提交={context['framework']['git_commit'] or 'unknown'}。"
             f"按本任务最小加载：{docs}。具体事实仍读该工作区 model.yaml、decisions.yaml、input-bindings.yaml 及回执。"
         )
     return {"hookSpecificOutput": {"hookEventName": name, "additionalContext": detail}}

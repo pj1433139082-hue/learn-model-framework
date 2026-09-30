@@ -10,6 +10,13 @@ Start from `docs/00-入口层/00-模型开发总览.md` and
 also read `docs/00-入口层/06-模型任务问答与交互档位.md`. Do not preload every
 model or historical document.
 
+Use the framework's `scripts/model-lab.ps1` or `bash scripts/model-lab.sh` launcher,
+not a bare interpreter from an old model checkout. First use and updates from
+`main` use the bootstrap helper; the manual fallback is entry document 04.
+If Skillshare is unavailable, read the selected source skill under
+`.skillshare/skills/` directly. Missing generated skills or an untrusted hook
+do not add a model approval gate.
+
 ## Route
 
 - New model or an unresolved business design: use `$model-requirements-grill`.
@@ -79,8 +86,12 @@ All three modes retain the same machine gates and the same bounded `AUTHORIZE`
 rule for Git remote transactions and real platform publication. A previously
 approved task may cover a specified sequence of unchanged remote operations;
 upload never implies production scheduling. Record the scenario, selected or
-defaulted mode, and any later mode change in the task work plan for resumption,
-not in `decisions.yaml`. See ADR 0014.
+defaulted mode, next action, and pending decision IDs using
+`model-lab task-plan <workspace> --task-id <explicit-task-id>` with `--apply`
+when saving. This record belongs to that private model task, not
+`decisions.yaml`; it never stores standing remote authorization. Restore the
+same explicit task ID rather than guessing the latest task. See entry 06 and
+ADR 0018. For framework-only work, use a dated review/acceptance record instead.
 
 - `AUTO`: inspect and verify without asking.
 - `ASK`: request missing information; only a required item blocks its transition.
@@ -132,8 +143,11 @@ for remote authorization or treat an unanswered recommendation as approval.
 After a long conversation, context compaction, handoff, or a bare “继续”, do not
 rely on chat memory as the source of project state. Reopen the entry/loading
 matrix, identify the active model or framework task, inspect Git worktree
-changes, and run `model-lab status` for the active model. Recover this task's
-interaction mode from its work plan; do not reopen the selector if it is recorded.
+changes, and run `model-lab status` for the active model. Read the explicit
+`task-plan` to recover this task's interaction mode, next action, and pending
+questions; do not reopen the selector if it is recorded. Check the framework
+source/commit in `context` and derive current facts anew rather than executing
+an old next-action string blindly. A task record is not remote authorization.
 Reconstruct confirmed business answers from `decisions.yaml` and evidence from
 `model-spec.md` and the latest dated validation or publication record. A
 hash-pinned pre-publication `model-spec.md` may preserve an earlier backend

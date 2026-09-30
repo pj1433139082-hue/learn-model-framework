@@ -184,7 +184,13 @@ def snapshot_in_sync(path: str | Path) -> bool:
 
 
 def write_snapshot(path: str | Path) -> Path:
-    manifest = manifest_path(path)
+    from model_lab.scaffolding import _refuse_symlink
+
+    _refuse_symlink(Path(path), "model workspace")
+    from model_lab.environment import ensure_external_workspace
+
+    workspace = ensure_external_workspace(path)
+    manifest = manifest_path(workspace)
     destination = manifest.parent / SNAPSHOT_NAME
     if destination.exists() and (not destination.is_file() or is_link_or_junction(destination)):
         raise ValueError(f"unsafe snapshot destination: {destination}")
@@ -207,7 +213,12 @@ def write_publication_receipt(
     run_id: str, owner: str, bundle_sha256: str, plan_id: str,
 ) -> Path:
     """Record a finished, downloaded and predicted Run; never replace a receipt."""
-    path = manifest_path(manifest)
+    from model_lab.scaffolding import _refuse_symlink
+
+    _refuse_symlink(Path(manifest), "model workspace")
+    from model_lab.environment import ensure_external_workspace
+
+    path = manifest_path(ensure_external_workspace(manifest))
     if not _RUN_ID.fullmatch(run_id):
         raise ValueError("invalid MLflow run ID")
     model = yaml.safe_load(path.read_text(encoding="utf-8"))["model"]
@@ -270,4 +281,16 @@ def task_context(path: str | Path, task: str = "status") -> dict[str, object]:
         docs.append("docs/10-流程层/15-多字段测点绑定.md")
     if task == "publish":
         docs.append("docs/adr/0017-发布验收与运营边界分离.md")
-    return {"snapshot": snapshot, "snapshot_in_sync": snapshot_in_sync(path), "docs": list(dict.fromkeys(docs))}
+    relative_docs = list(dict.fromkeys(docs))
+    from model_lab.environment import framework_identity
+
+    framework = framework_identity()
+    root = Path(str(framework["root"]))
+    doc_paths = [str((root / relative).resolve(strict=False)) for relative in relative_docs]
+    return {
+        "snapshot": snapshot,
+        "snapshot_in_sync": snapshot_in_sync(path),
+        "docs": relative_docs,
+        "doc_paths": doc_paths,
+        "framework": framework,
+    }

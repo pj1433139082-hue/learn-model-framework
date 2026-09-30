@@ -152,12 +152,20 @@ def fork_maintenance(
     path: str | Path, version: str, *, change_kind: str = "behavior-unchanged", apply: bool = False
 ) -> MaintenanceReport:
     candidate = ensure_local_filesystem_path(path, "released model")
-    parent = candidate if candidate.is_dir() else candidate.parent
+    candidate_workspace = candidate if candidate.is_dir() else candidate.parent
+    # This remains lazy to keep import-time dependencies small and lets the
+    # environment boundary own framework-root detection in one place.
+    from model_lab.environment import ensure_external_workspace
+
+    try:
+        parent = ensure_external_workspace(candidate_workspace)
+    except ValueError as error:
+        raise WorkspaceError(getattr(error, "code", "unsafe_workspace_path"), str(error)) from error
     manifest = parent / "model.yaml"
     models_root = parent.parent
     _refuse_symlink(manifest, "released model")
-    if parent.name == "_drafts" or models_root.name != "models" or not manifest.is_file():
-        raise WorkspaceError("maintenance_parent_invalid", "select one released models/* workspace")
+    if parent.name == "_drafts" or models_root.name == "_drafts" or not manifest.is_file():
+        raise WorkspaceError("maintenance_parent_invalid", "select one released workspace outside a _drafts directory")
     document = _load_released(manifest)
     model = _object(document, "model")
     base_version, new_version = _version_pair(model.get("version"), version, change_kind)

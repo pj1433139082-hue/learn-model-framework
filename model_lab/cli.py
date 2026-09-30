@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 from collections.abc import Sequence
 from pathlib import Path
@@ -50,32 +49,41 @@ from model_lab.bundle_build import BundleBuildError, build_bundle
 from model_lab.test_profiles import PROFILE_NAMES, run_test_profile
 from model_lab.workflow_state import (
     model_manifests,
-    snapshot_in_sync,
     task_context,
     write_snapshot,
 )
+from model_lab.environment import configured_models_root, ensure_external_workspace, framework_root, framework_identity
+from model_lab.setup import setup_workspace
+from model_lab.task_plan import read_task_plan, write_task_plan
 
 
 def _configured_models_root(value: str | None) -> Path:
-    configured = value or os.environ.get("MODEL_LAB_MODELS_ROOT")
-    if not configured:
-        raise WorkspaceError(
-            "models_root_required",
-            "指定 --models-root 或 MODEL_LAB_MODELS_ROOT，模型资产不能写入纯框架仓库",
-        )
-    root = Path(configured).expanduser().resolve()
-    framework_root = Path(__file__).resolve().parents[1]
-    if root == framework_root or root.is_relative_to(framework_root):
-        raise WorkspaceError(
-            "models_root_inside_framework",
-            "私有模型目录必须位于纯框架仓库之外",
-        )
-    return root
+    try:
+        return configured_models_root(value)
+    except ValueError as error:
+        raise WorkspaceError(getattr(error, "code", "models_root_required"), str(error)) from error
 
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="model-lab")
+    parser.add_argument("--version", action="version", version=str(framework_identity()["version"]))
     commands = parser.add_subparsers(dest="command", required=True)
+
+    setup_parser = commands.add_parser("setup", help="一次本机配置：私有目录、项目技能与框架来源")
+    setup_parser.add_argument("--models-root", help="仓库外的私有模型根目录；省略时复用配置")
+    setup_parser.add_argument("--apply", action="store_true", help="应用本机配置与技能同步；默认预览")
+    setup_parser.add_argument("--update", action="store_true", help="拉取 main 后同步本机设置并记录框架提交")
+    setup_parser.add_argument("--format", choices=("human", "json"), default="human")
+
+    task_parser = commands.add_parser("task-plan", help="记录或恢复单个任务的交互档位与下一步")
+    task_parser.add_argument("workspace", help="私有模型工作区")
+    task_parser.add_argument("--task-id", required=True, help="本次任务唯一的小写英文 ID")
+    task_parser.add_argument("--mode", choices=("full-auto", "assisted", "manual-review"))
+    task_parser.add_argument("--intent", choices=("new", "maintain", "build", "publish", "status", "read", "data-audit"))
+    task_parser.add_argument("--next-action", help="下一步；不包含凭据或永久发布许可")
+    task_parser.add_argument("--pending", action="append", default=[], help="待回答决策 ID，可重复")
+    task_parser.add_argument("--apply", action="store_true", help="保存任务计划；默认只读或预览")
+    task_parser.add_argument("--format", choices=("human", "json"), default="human")
 
     new_parser = commands.add_parser(
         "new", help="规划或创建一个版本化模板驱动的模型工作区"
@@ -282,8 +290,8 @@ def _build_parser() -> argparse.ArgumentParser:
     release_gate_parser.add_argument(
         "repository_root",
         nargs="?",
-        default=".",
-        help="仓库根路径（默认：当前目录）",
+        default=str(framework_root()),
+        help="框架根路径（默认：当前实际加载的框架）",
     )
     release_gate_parser.add_argument(
         "--format",
@@ -307,8 +315,8 @@ def _build_parser() -> argparse.ArgumentParser:
     doctor_parser.add_argument(
         "repository_root",
         nargs="?",
-        default=".",
-        help="仓库根路径（默认：当前目录）",
+        default=str(framework_root()),
+        help="框架根路径（默认：当前实际加载的框架）",
     )
     doctor_parser.add_argument(
         "--format",
@@ -316,6 +324,8 @@ def _build_parser() -> argparse.ArgumentParser:
         default="human",
         help="输出格式（默认：human）",
     )
+    doctor_parser.add_argument("--company-package", help="外部公司 Python 3.11 ZIP；仅静态核对，不执行")
+    doctor_parser.add_argument("--target-platform", choices=("linux_x86_64", "windows_x86_64"), help="公司运行时目标；默认当前平台")
 
     profile_parser = commands.add_parser(
         "test-profile",
@@ -380,6 +390,58 @@ def main(arguments: Sequence[str] | None = None) -> int:
     parser = _build_parser()
     options = parser.parse_args(raw_arguments)
 
+    if options.command == "setup":
+        try:
+            result = setup_workspace(options.models_root, apply=options.apply, update=options.update)
+        except (OSError, ValueError) as error:
+            print(f"model-lab setup: {error}", file=sys.stderr)
+            return 2
+        if options.format == "json":
+            print(json.dumps(result, ensure_ascii=False, sort_keys=True))
+        else:
+            print(f"setup: {result['status']}")
+            print(f"Framework: {result['framework']['root']}")
+            print(f"Source: {result['framework']['version']} | {result['framework'].get('git_commit') or 'unknown commit'} | dirty={result['framework'].get('git_dirty')}")
+            if "models_root" in result:
+                print(f"Private models: {result['models_root'] or 'not configured'}")
+            if "skills" in result:
+                print(f"Skills: {result['skills']['status']}")
+            if "hooks" in result:
+                print(f"Hook: {result['hooks']['state']} (AGENTS.md + context/status remain available)")
+            if result.get("update"):
+                print(f"Update: {result['update']['previous_commit'] or 'unknown'} -> {result['update']['current_commit'] or 'unknown'}")
+            print(f"next: {result['next_action']}")
+        return 0 if result["valid"] else 2
+
+    if options.command == "task-plan":
+        fields = (options.mode, options.intent, options.next_action)
+        if any(fields) and not all(fields):
+            parser.error("task-plan updates require --mode, --intent and --next-action together")
+        if options.apply and not all(fields):
+            parser.error("task-plan --apply requires the task's mode, intent and next action")
+        try:
+            ensure_external_workspace(options.workspace)
+            if all(fields):
+                result = {"status": "planned", "task_id": options.task_id, "mode": options.mode,
+                          "intent": options.intent, "next_action": options.next_action,
+                          "pending_decisions": options.pending}
+                if options.apply:
+                    path = write_task_plan(options.workspace, options.task_id, mode=options.mode,
+                                           intent=options.intent, next_action=options.next_action,
+                                           pending_decisions=tuple(options.pending))
+                    result = {"status": "recorded", "path": str(path),
+                              "task": read_task_plan(options.workspace, options.task_id)}
+            else:
+                result = {"status": "recorded", "task": read_task_plan(options.workspace, options.task_id)}
+                if result["task"] is None:
+                    result["status"] = "not_recorded"
+        except (OSError, ValueError, yaml.YAMLError) as error:
+            print(f"model-lab task-plan: {error}", file=sys.stderr)
+            return 2
+        print(json.dumps(result, ensure_ascii=False, sort_keys=True) if options.format == "json"
+              else json.dumps(result, ensure_ascii=False, indent=2))
+        return 0
+
     if options.command == "context":
         if options.all == bool(options.workspace):
             parser.error("context requires exactly one workspace or --all")
@@ -400,6 +462,8 @@ def main(arguments: Sequence[str] | None = None) -> int:
                     "snapshot_in_sync": context["snapshot_in_sync"],
                     "publication": snapshot["publication"], "serving": snapshot["serving"],
                     "docs": context["docs"] if not options.all else [],
+                    "doc_paths": context["doc_paths"] if not options.all else [],
+                    "framework": context["framework"],
                 })
         except (OSError, ValueError, yaml.YAMLError) as error:
             print(f"model-lab context: {error}", file=sys.stderr)
@@ -412,12 +476,14 @@ def main(arguments: Sequence[str] | None = None) -> int:
                 print(f"{item['model_id']} {item['version']}: {item['lifecycle_state']} | "
                       f"snapshot {'in sync' if item['snapshot_in_sync'] else 'DRIFTED'} | "
                       f"publication {item['publication']['status']}")
-                for doc in item["docs"]:
+                print(f"  Framework: {item['framework']['root']} | {item['framework']['version']} | {item['framework']['git_commit'] or 'unknown commit'} | dirty={item['framework']['git_dirty']}")
+                for doc in item["doc_paths"]:
                     print(f"  - {doc}")
         return 3 if options.check and not valid else 0
 
     if options.command == "verify-publication":
         try:
+            ensure_external_workspace(options.manifest)
             result = verify_existing_publication(
                 options.manifest, experiment=options.experiment,
                 run_id=options.run_id, company_package=options.company_package,
@@ -526,7 +592,8 @@ def main(arguments: Sequence[str] | None = None) -> int:
         return 0 if release_report.valid else 5
 
     if options.command == "doctor":
-        doctor_report = run_repository_doctor(options.repository_root)
+        doctor_report = run_repository_doctor(options.repository_root, company_package=options.company_package,
+                                             target_platform=options.target_platform)
         if options.format == "json":
             print(json.dumps(doctor_report.as_dict(), ensure_ascii=False, sort_keys=True))
         else:

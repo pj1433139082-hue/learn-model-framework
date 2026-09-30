@@ -22,7 +22,7 @@ class FrameworkFlowTests(unittest.TestCase):
         return result, output.getvalue(), errors.getvalue()
 
     def test_new_requires_explicit_private_root(self) -> None:
-        with patch.dict(os.environ, {}, clear=True):
+        with patch.dict(os.environ, {}, clear=True), patch("model_lab.environment.read_local_settings", return_value={}):
             code, _, errors = self._call(
                 "new", "example-flow", "--name", "Example", "--owner", "example",
             )
@@ -71,7 +71,7 @@ class FrameworkFlowTests(unittest.TestCase):
             self.assertEqual((code, errors), (0, ""))
 
     def test_context_all_requires_external_root(self) -> None:
-        with patch.dict(os.environ, {}, clear=True):
+        with patch.dict(os.environ, {}, clear=True), patch("model_lab.environment.read_local_settings", return_value={}):
             code, _, errors = self._call("context", "--all")
         self.assertEqual(code, 2)
         self.assertIn("MODEL_LAB_MODELS_ROOT", errors)

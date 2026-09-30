@@ -193,12 +193,18 @@ def _carry_forward_decisions(template: str, parent: dict[str, Any]) -> str:
 
 def fork_draft_contract(path: str | Path, version: str, *, apply: bool = False) -> DraftUpgradeReport:
     candidate = ensure_local_filesystem_path(path, "draft model")
-    parent = candidate if candidate.is_dir() else candidate.parent
+    candidate_workspace = candidate if candidate.is_dir() else candidate.parent
+    # Keep framework-boundary discovery centralized in the environment module.
+    from model_lab.environment import ensure_external_workspace
+
+    try:
+        parent = ensure_external_workspace(candidate_workspace)
+    except ValueError as error:
+        raise WorkspaceError(getattr(error, "code", "unsafe_workspace_path"), str(error)) from error
     _refuse_symlink(parent, "draft parent")
     drafts = parent.parent
-    models_root = drafts.parent
-    if drafts.name != "_drafts" or models_root.name != "models" or not parent.is_dir():
-        raise WorkspaceError("draft_upgrade_parent_invalid", "select a models/_drafts/<model-id> workspace")
+    if drafts.name != "_drafts" or not parent.is_dir():
+        raise WorkspaceError("draft_upgrade_parent_invalid", "select an external _drafts/<model-id> workspace")
     document, digests = _verified_parent(parent)
     model = document["model"]
     model_id = str(model["id"])

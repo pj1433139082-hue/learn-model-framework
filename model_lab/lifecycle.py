@@ -1698,6 +1698,13 @@ def advance_workspace(
 ) -> LifecycleReport:
     """Plan or apply exactly one permitted lifecycle transition."""
 
+    if apply:
+        from model_lab.environment import ensure_external_workspace
+        try:
+            ensure_external_workspace(path)
+        except ValueError as error:
+            raise WorkspaceError(getattr(error, "code", "unsafe_workspace_path"), str(error)) from error
+
     report = _workspace_report(path)
     manifest = Path(report.manifest)
     if not _is_draft_workspace(manifest):

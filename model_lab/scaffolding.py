@@ -19,7 +19,10 @@ import yaml  # type: ignore[import-untyped]
 
 from model_lab.manifest import ManifestError, validate_manifest
 from model_lab.environment import framework_identity
-from model_lab.path_safety import is_link_or_junction
+from model_lab.path_safety import (
+    first_link_or_junction_component,
+    is_link_or_junction,
+)
 from model_lab.runtime_contract import (
     ACTIVE_RUNTIME_PROFILE_IDS,
     DEFAULT_RUNTIME_PROFILE_ID,
@@ -516,17 +519,12 @@ def _drafts_root(models_root: Path) -> Path:
 
 
 def _refuse_symlink(path: Path, label: str) -> None:
-    candidate = path
-    while True:
-        if is_link_or_junction(candidate):
-            raise WorkspaceError(
-                "unsafe_workspace_path",
-                f"{label} must not pass through a link or junction: {candidate}",
-            )
-        parent = candidate.parent
-        if parent == candidate:
-            return
-        candidate = parent
+    component = first_link_or_junction_component(path)
+    if component is not None:
+        raise WorkspaceError(
+            "unsafe_workspace_path",
+            f"{label} must not pass through a link or junction: {component}",
+        )
 
 
 def _existing_model_ids(models_root: Path) -> dict[str, Path]:

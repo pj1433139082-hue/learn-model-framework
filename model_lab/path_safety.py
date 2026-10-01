@@ -28,4 +28,26 @@ def is_link_or_junction(path: Path) -> bool:
     return mount_point_tag is not None and reparse_tag == mount_point_tag
 
 
-__all__ = ["is_link_or_junction"]
+def first_link_or_junction_component(path: Path) -> Path | None:
+    """Return the first redirected component without resolving path segments.
+
+    Existing components are inspected in the order supplied by *path*. In
+    particular, a link before ``..`` is reported before the parent segment can
+    make a resolved path appear harmless.
+    """
+
+    absolute = path if path.is_absolute() else Path.cwd() / path
+    component = Path(absolute.anchor)
+    if is_link_or_junction(component):
+        return component
+
+    for part in absolute.parts[1:]:
+        if part in {"", "."}:
+            continue
+        component = component.parent if part == ".." else component / part
+        if is_link_or_junction(component):
+            return component
+    return None
+
+
+__all__ = ["first_link_or_junction_component", "is_link_or_junction"]

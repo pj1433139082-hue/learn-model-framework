@@ -27,9 +27,10 @@ import yaml  # type: ignore[import-untyped]
 from model_lab.bundle_build import _tree_digest
 from model_lab.deployment import build_dry_run_plan
 from model_lab.online_acceptance import PROFILE, verify_online_acceptance
-from model_lab.path_safety import is_link_or_junction
+from model_lab.path_safety import first_link_or_junction_component, is_link_or_junction
+from model_lab.record_recovery import LocalRecordResult, framework_recovery_command, refresh_snapshot
 from model_lab.runtime_contract import check_build_environment
-from model_lab.workflow_state import write_publication_receipt, write_snapshot
+from model_lab.workflow_state import write_publication_receipt
 
 
 _COMPANY_MODULE = "infra_model_deploy/resources/infra/mlops_deploy_iot2.py"
@@ -56,9 +57,16 @@ class PublishExecutionResult:
     error_type: str | None = None
     remote_writes: bool | None = False
     receipt_path: str | None = None
+    record_result: LocalRecordResult | None = None
+    recovery_action: str = "refresh_snapshot"
+    recovery_command: tuple[str, ...] = ()
+
+    @property
+    def local_record_incomplete(self) -> bool:
+        return self.record_result is not None and not self.record_result.complete
 
     def as_dict(self) -> dict[str, object]:
-        return {
+        result: dict[str, object] = {
             "status": self.status,
             "reason": self.reason,
             "model_id": self.model_id,
@@ -72,6 +80,9 @@ class PublishExecutionResult:
             "receipt_path": self.receipt_path,
             "safety": {"remote_writes": self.remote_writes},
         }
+        if self.record_result is not None:
+            result.update(self.record_result.details(action=self.recovery_action, command=self.recovery_command))
+        return result
 
     def as_text(self) -> str:
         action = "EXISTING PUBLICATION" if self.status == "verified" else "PUBLISH"
@@ -89,7 +100,76 @@ class PublishExecutionResult:
             lines.append(f"Error type: {self.error_type}")
         if self.receipt_path:
             lines.append(f"Local receipt: {self.receipt_path}")
+        if self.record_result is not None and self.record_result.details(action=self.recovery_action, command=self.recovery_command):
+            lines.append(self.record_result.as_text(command=self.recovery_command))
         return "\n".join(lines)
+
+
+def _record_verified_run(
+    path: Path, *, experiment: str, experiment_id: str, run_id: str,
+    owner: str, digest: str, plan_id: str, model_id: str, version: str,
+) -> tuple[Path | None, LocalRecordResult, str | None]:
+    """Store local evidence only; the caller has already verified the remote Run."""
+    from model_lab.environment import ensure_external_workspace
+
+    workspace = path.parent
+    receipt = workspace / "validation" / "publications" / f"{run_id}.json"
+    try:
+        ensure_external_workspace(path)
+        current = yaml.safe_load(path.read_text(encoding="utf-8"))
+        model = current["model"]
+        bundles = [item for item in current.get("artifacts", []) if item.get("kind") == "mlflow-pyfunc"]
+        if (model.get("id") != model_id or model.get("version") != version
+                or len(bundles) != 1 or bundles[0].get("sha256") != digest):
+            raise PublishBlocked("local_facts_changed", "model identity or bundle changed after remote verification")
+        if first_link_or_junction_component(receipt) is not None:
+            raise PublishBlocked("receipt_conflict", "local receipt path is linked")
+        if receipt.exists():
+            if not receipt.is_file():
+                raise PublishBlocked("receipt_conflict", "existing local receipt is not a regular file")
+            try:
+                recorded = json.loads(receipt.read_text(encoding="utf-8"))
+            except (ValueError, UnicodeError) as error:
+                raise PublishBlocked("receipt_conflict", "existing local receipt is invalid") from error
+            verification = recorded.get("verification") if isinstance(recorded, dict) else None
+            if (not isinstance(recorded, dict)
+                    or recorded.get("schema_version") != "1.0"
+                    or recorded.get("status") != "verified"
+                    or recorded.get("experiment") != experiment
+                    or recorded.get("bundle_sha256") != digest
+                    or recorded.get("run_id") != run_id
+                    or not isinstance(verification, dict)
+                    or not all(verification.get(key) is True for key in
+                               ("run_finished", "downloaded_digest_matched", "platform_predict_matched"))):
+                raise PublishBlocked("receipt_conflict", "existing local receipt differs from the verified Run")
+            if (recorded.get("model_id") != model["id"]
+                    or recorded.get("model_version") != model["version"]):
+                raise PublishBlocked("receipt_conflict", "existing receipt differs from the model version")
+        else:
+            receipt = write_publication_receipt(
+                path, experiment=experiment, experiment_id=experiment_id,
+                run_id=run_id, owner=owner, bundle_sha256=digest, plan_id=plan_id,
+            )
+    except Exception as error:
+        reason = error.reason if isinstance(error, PublishBlocked) else None
+        return None, LocalRecordResult("incomplete", failed_part="receipt", error_type=type(error).__name__), reason
+    try:
+        result = refresh_snapshot(path)
+    except Exception as error:
+        result = LocalRecordResult("incomplete", 1, "snapshot", type(error).__name__)
+    return receipt, result, None
+
+
+def _publication_recovery(
+    record: LocalRecordResult, path: Path, *, experiment: str, run_id: str,
+    company_package: Path,
+) -> tuple[str, tuple[str, ...]]:
+    if record.failed_part == "receipt":
+        return "verify_existing_publication", framework_recovery_command(
+            "verify-publication", str(path), "--experiment", experiment,
+            "--run-id", run_id, "--company-package", str(company_package), "--format", "json",
+        )
+    return "refresh_snapshot", framework_recovery_command("context", str(path), "--write", "--format", "json")
 
 
 def _verified_company_package(path: Path, expected_sha256: str) -> None:
@@ -318,24 +398,20 @@ def publish_fixed_bundle(
         client.set_terminated(run_id, status="FINISHED")
         # The remote transaction has now succeeded. A local disk error must not
         # send this verified Run back through the outer FAILED handler.
-        try:
-            receipt = write_publication_receipt(
-                path, experiment=experiment, experiment_id=str(experiment_id),
-                run_id=run_id, owner=owner, bundle_sha256=expected_digest,
-                plan_id=plan.plan_id,
-            )
-            write_snapshot(path)
-        except Exception as local_error:
-            return PublishExecutionResult(
-                "published", "verified_local_record_incomplete", model_id, version,
-                experiment, owner, expected_digest, run_id=run_id,
-                phase="local-record", error_type=type(local_error).__name__,
-                remote_writes=True,
-            )
+        receipt, record, local_reason = _record_verified_run(
+            path, experiment=experiment, experiment_id=str(experiment_id),
+            run_id=run_id, owner=owner, digest=expected_digest, plan_id=plan.plan_id, model_id=model_id, version=version,
+        )
+        recovery_action, recovery_command = _publication_recovery(
+            record, path, experiment=experiment, run_id=run_id, company_package=package,
+        )
         return PublishExecutionResult(
-            "published", "verified", model_id, version, experiment, owner,
+            "published", "verified" if record.complete else local_reason or "verified_local_record_incomplete",
+            model_id, version, experiment, owner,
             expected_digest, run_id=run_id, remote_writes=True,
-            receipt_path=str(receipt.relative_to(workspace)).replace("\\", "/"),
+            receipt_path=str(receipt.relative_to(workspace)).replace("\\", "/") if receipt is not None else None,
+            phase=None if record.complete else "local-record", error_type=record.error_type,
+            record_result=record, recovery_action=recovery_action, recovery_command=recovery_command,
         )
     except Exception as error:
         if run_id is not None and client is not None:
@@ -411,33 +487,20 @@ def verify_existing_publication(
         _check_remote_service(client, run_id, digest, sample, expected,
                               tuple(item["name"] for item in outputs))
         phase = "local-record"
-        receipt = workspace / "validation" / "publications" / f"{run_id}.json"
-        if receipt.exists():
-            if is_link_or_junction(receipt):
-                raise PublishBlocked("receipt_conflict", "existing local receipt is linked")
-            recorded = json.loads(receipt.read_text(encoding="utf-8"))
-            verification = recorded.get("verification", {})
-            if (recorded.get("status") != "verified"
-                    or recorded.get("experiment") != experiment
-                    or recorded.get("model_id") != model_id
-                    or recorded.get("model_version") != version
-                    or recorded.get("bundle_sha256") != digest
-                    or recorded.get("run_id") != run_id
-                    or not isinstance(verification, dict)
-                    or not all(verification.get(key) is True for key in
-                               ("run_finished", "downloaded_digest_matched", "platform_predict_matched"))):
-                raise PublishBlocked("receipt_conflict", "existing local receipt differs from the verified Run")
-        else:
-            receipt = write_publication_receipt(
-                path, experiment=experiment, experiment_id=str(target.experiment_id),
-                run_id=run_id, owner=owner, bundle_sha256=digest,
-                plan_id=tags.get("model_lab_plan_id", ""),
-            )
-        write_snapshot(path)
+        receipt, record, local_reason = _record_verified_run(
+            path, experiment=experiment, experiment_id=str(target.experiment_id),
+            run_id=run_id, owner=owner, digest=digest, plan_id=tags.get("model_lab_plan_id", ""), model_id=model_id, version=version,
+        )
+        recovery_action, recovery_command = _publication_recovery(
+            record, path, experiment=experiment, run_id=run_id, company_package=package,
+        )
         return PublishExecutionResult(
-            "verified", "existing_run_verified", model_id, version, experiment,
+            "verified", "existing_run_verified" if record.complete else local_reason or "verified_local_record_incomplete",
+            model_id, version, experiment,
             owner, digest, run_id=run_id, remote_writes=False,
-            receipt_path=str(receipt.relative_to(workspace)).replace("\\", "/"),
+            receipt_path=str(receipt.relative_to(workspace)).replace("\\", "/") if receipt is not None else None,
+            phase=None if record.complete else "local-record", error_type=record.error_type,
+            record_result=record, recovery_action=recovery_action, recovery_command=recovery_command,
         )
     except Exception as error:
         reason = error.reason if isinstance(error, PublishBlocked) else "verification_error"

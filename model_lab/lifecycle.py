@@ -19,7 +19,10 @@ from model_lab.draft_upgrade import DRAFT_UPGRADE_TEMPLATE_ID, validate_draft_up
 from model_lab.online_acceptance import verify_online_acceptance
 from model_lab.manifest import ManifestError, validate_manifest
 from model_lab.maintenance import CONTRACT_UPGRADE_WORKFLOW_ID, MAINTENANCE_WORKFLOW_ID, validate_maintenance_lineage
-from model_lab.path_safety import is_link_or_junction
+from model_lab.path_safety import (
+    first_link_or_junction_component,
+    is_link_or_junction,
+)
 from model_lab.release_gate import scan_workspace_tree
 from model_lab.runtime_contract import (
     RuntimeCheckReport,
@@ -197,35 +200,25 @@ def _workflow_document(workflow_id: str = WORKFLOW_ID) -> Mapping[str, Any]:
 def _manifest_path(path: str | Path) -> Path:
     candidate = ensure_local_filesystem_path(path, "workspace")
     try:
-        component = candidate
-        while True:
-            if is_link_or_junction(component):
-                raise WorkspaceError(
-                    "unsafe_workspace_path",
-                    "workspace path must not pass through a link or junction: "
-                    f"{component}",
-                )
-            parent = component.parent
-            if parent == component:
-                break
-            component = parent
+        component = first_link_or_junction_component(candidate)
+        if component is not None:
+            raise WorkspaceError(
+                "unsafe_workspace_path",
+                "workspace path must not pass through a link or junction: "
+                f"{component}",
+            )
         manifest = candidate / "model.yaml" if candidate.is_dir() else candidate
         if not manifest.is_file():
             raise WorkspaceError(
                 "manifest_not_found", f"workspace manifest does not exist: {manifest}"
             )
-        component = manifest
-        while True:
-            if is_link_or_junction(component):
-                raise WorkspaceError(
-                    "unsafe_workspace_path",
-                    "workspace path must not pass through a link or junction: "
-                    f"{component}",
-                )
-            parent = component.parent
-            if parent == component:
-                break
-            component = parent
+        component = first_link_or_junction_component(manifest)
+        if component is not None:
+            raise WorkspaceError(
+                "unsafe_workspace_path",
+                "workspace path must not pass through a link or junction: "
+                f"{component}",
+            )
         return manifest
     except OSError as error:
         raise WorkspaceError(

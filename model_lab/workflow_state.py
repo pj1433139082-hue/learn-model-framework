@@ -18,7 +18,10 @@ from typing import Any
 import yaml  # type: ignore[import-untyped]
 
 from model_lab.decisions import load_decision_register
-from model_lab.path_safety import is_link_or_junction
+from model_lab.path_safety import (
+    first_link_or_junction_component,
+    is_link_or_junction,
+)
 
 
 SNAPSHOT_NAME = "workflow-state.json"
@@ -184,10 +187,14 @@ def snapshot_in_sync(path: str | Path) -> bool:
 
 
 def write_snapshot(path: str | Path) -> Path:
-    from model_lab.scaffolding import _refuse_symlink
+    from model_lab.environment import EnvironmentError, ensure_external_workspace
 
-    _refuse_symlink(Path(path), "model workspace")
-    from model_lab.environment import ensure_external_workspace
+    component = first_link_or_junction_component(Path(path))
+    if component is not None:
+        raise EnvironmentError(
+            "unsafe_workspace_path",
+            f"model workspace must not pass through a link or junction: {component}",
+        )
 
     workspace = ensure_external_workspace(path)
     manifest = manifest_path(workspace)
@@ -197,14 +204,16 @@ def write_snapshot(path: str | Path) -> Path:
     rendered = _json_text(build_snapshot(manifest))
     if destination.is_file() and destination.read_text(encoding="utf-8") == rendered:
         return destination
-    with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", newline="\n", dir=manifest.parent,
-                                     prefix=".workflow-state-", suffix=".tmp", delete=False) as output:
-        temporary = Path(output.name)
-        output.write(rendered)
+    temporary: Path | None = None
     try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", newline="\n", dir=manifest.parent,
+                                         prefix=".workflow-state-", suffix=".tmp", delete=False) as output:
+            temporary = Path(output.name)
+            output.write(rendered)
         os.replace(temporary, destination)
     finally:
-        temporary.unlink(missing_ok=True)
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
     return destination
 
 
@@ -213,10 +222,14 @@ def write_publication_receipt(
     run_id: str, owner: str, bundle_sha256: str, plan_id: str,
 ) -> Path:
     """Record a finished, downloaded and predicted Run; never replace a receipt."""
-    from model_lab.scaffolding import _refuse_symlink
+    from model_lab.environment import EnvironmentError, ensure_external_workspace
 
-    _refuse_symlink(Path(manifest), "model workspace")
-    from model_lab.environment import ensure_external_workspace
+    component = first_link_or_junction_component(Path(manifest))
+    if component is not None:
+        raise EnvironmentError(
+            "unsafe_workspace_path",
+            f"model workspace must not pass through a link or junction: {component}",
+        )
 
     path = manifest_path(ensure_external_workspace(manifest))
     if not _RUN_ID.fullmatch(run_id):

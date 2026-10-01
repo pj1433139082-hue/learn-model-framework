@@ -12,7 +12,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: python -m pip install -e '.[test]'
-      - run: python -m model_lab doctor
-      - run: python -m model_lab test-profile local
-      - run: python -m model_lab release-gate
+      - name: Initialize the framework Python 3.11 environment
+        run: bash scripts/bootstrap.sh --models-root "$RUNNER_TEMP/model-lab-private"
+      - run: bash scripts/model-lab.sh doctor
+      - run: bash scripts/model-lab.sh test-profile local
+      - run: bash scripts/model-lab.sh release-gate

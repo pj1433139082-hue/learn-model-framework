@@ -11,7 +11,7 @@ import tempfile
 import unicodedata
 import yaml  # type: ignore[import-untyped]
 
-from model_lab.scaffolding import _refuse_symlink
+from model_lab.path_safety import first_link_or_junction_component
 from model_lab.workflow_state import manifest_path
 
 
@@ -43,6 +43,15 @@ class TaskPlanError(ValueError):
         self.code = code
 
 
+def _refuse_redirected_path(path: Path, label: str) -> None:
+    component = first_link_or_junction_component(path)
+    if component is not None:
+        raise TaskPlanError(
+            "unsafe_workspace_path",
+            f"{label} must not pass through a link or junction: {component}",
+        )
+
+
 def _task_id(value: object) -> str:
     if not isinstance(value, str) or not _TASK_ID.fullmatch(value) or value.endswith("."):
         raise TaskPlanError("task_id_invalid", "task_id must be a lowercase filesystem-safe identifier")
@@ -72,10 +81,10 @@ def _canonical_workspace(value: str | Path) -> Path:
     from model_lab.environment import ensure_external_workspace
 
     try:
-        _refuse_symlink(Path(value), "model workspace")
+        _refuse_redirected_path(Path(value), "model workspace")
         manifest = manifest_path(value)
         workspace = ensure_external_workspace(manifest.parent)
-        _refuse_symlink(workspace, "model workspace")
+        _refuse_redirected_path(workspace, "model workspace")
         return workspace
     except (OSError, yaml.YAMLError) as error:
         raise TaskPlanError("task_workspace_invalid", "model workspace cannot be read safely") from error
@@ -109,15 +118,15 @@ def _plan_directories(workspace: Path, *, create: bool) -> tuple[Path, Path]:
     metadata = workspace / ".model-lab"
     tasks = metadata / "tasks"
     for path, label in ((workspace, "model workspace"), (metadata, "task metadata directory"), (tasks, "task directory")):
-        _refuse_symlink(path, label)
+        _refuse_redirected_path(path, label)
     if create:
         try:
             metadata.mkdir(exist_ok=True)
-            _refuse_symlink(metadata, "task metadata directory")
+            _refuse_redirected_path(metadata, "task metadata directory")
             if not metadata.is_dir():
                 raise TaskPlanError("task_plan_path_unsafe", "task metadata path is not a directory")
             tasks.mkdir(exist_ok=True)
-            _refuse_symlink(tasks, "task directory")
+            _refuse_redirected_path(tasks, "task directory")
         except OSError as error:
             raise TaskPlanError("task_plan_write_failed", "task directory could not be created") from error
     elif metadata.exists() and not metadata.is_dir() or tasks.exists() and not tasks.is_dir():
@@ -171,7 +180,7 @@ def read_task_plan(workspace: str | Path, task_id: str) -> dict[str, object] | N
     if not tasks.exists():
         return None
     target = tasks / f"{safe_task_id}.json"
-    _refuse_symlink(target, "task plan")
+    _refuse_redirected_path(target, "task plan")
     if not target.exists():
         return None
     if not target.is_file() or target.stat().st_nlink > 1:
@@ -245,7 +254,7 @@ def write_task_plan(
 
     _, tasks = _plan_directories(canonical, create=True)
     destination = tasks / f"{safe_task_id}.json"
-    _refuse_symlink(destination, "task plan")
+    _refuse_redirected_path(destination, "task plan")
     if destination.exists() and (not destination.is_file() or destination.stat().st_nlink > 1):
         raise TaskPlanError("task_plan_path_unsafe", "existing task plan is not a regular single-link file")
     temporary: Path | None = None
@@ -258,8 +267,8 @@ def write_task_plan(
             output.write(json.dumps(record, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
             output.flush()
             os.fsync(output.fileno())
-        _refuse_symlink(destination, "task plan")
-        _refuse_symlink(temporary, "temporary task plan")
+        _refuse_redirected_path(destination, "task plan")
+        _refuse_redirected_path(temporary, "temporary task plan")
         os.replace(temporary, destination)
     except (OSError, ValueError) as error:
         raise TaskPlanError("task_plan_write_failed", "task plan could not be written atomically") from error

@@ -11,13 +11,15 @@ import yaml  # type: ignore[import-untyped]
 
 from model_lab.maintenance import _sha256, _version_pair
 from model_lab.manifest import ManifestError, validate_manifest
-from model_lab.path_safety import is_link_or_junction
+from model_lab.path_safety import (
+    first_link_or_junction_component,
+    is_link_or_junction,
+)
 from model_lab.scaffolding import (
     TEMPLATE_VERSION,
     ScaffoldRequest,
     WorkspaceError,
     _normalize_request,
-    _refuse_symlink,
     _render_files,
     _write_workspace,
     ensure_local_filesystem_path,
@@ -52,6 +54,15 @@ _INHERITED_SECTIONS = {
 }
 
 
+def _refuse_redirected_path(path: Path, label: str) -> None:
+    component = first_link_or_junction_component(path)
+    if component is not None:
+        raise WorkspaceError(
+            "unsafe_workspace_path",
+            f"{label} must not pass through a link or junction: {component}",
+        )
+
+
 @dataclass(frozen=True)
 class DraftUpgradeReport:
     status: str
@@ -84,7 +95,7 @@ class DraftUpgradeReport:
 
 
 def _document(path: Path, label: str) -> dict[str, Any]:
-    _refuse_symlink(path, label)
+    _refuse_redirected_path(path, label)
     try:
         value = yaml.safe_load(path.read_text(encoding="utf-8"))
     except (OSError, UnicodeError, yaml.YAMLError) as error:
@@ -98,7 +109,7 @@ def _parent_files(parent: Path) -> dict[str, str]:
     digests: dict[str, str] = {}
     for relative in _FROZEN_FILES:
         path = parent.joinpath(*PurePosixPath(relative).parts)
-        _refuse_symlink(path, f"parent {relative}")
+        _refuse_redirected_path(path, f"parent {relative}")
         if not path.is_file():
             raise WorkspaceError("draft_upgrade_parent_invalid", f"parent {relative} is missing")
         digests[relative] = _sha256(path)
@@ -201,7 +212,7 @@ def fork_draft_contract(path: str | Path, version: str, *, apply: bool = False) 
         parent = ensure_external_workspace(candidate_workspace)
     except ValueError as error:
         raise WorkspaceError(getattr(error, "code", "unsafe_workspace_path"), str(error)) from error
-    _refuse_symlink(parent, "draft parent")
+    _refuse_redirected_path(parent, "draft parent")
     drafts = parent.parent
     if drafts.name != "_drafts" or not parent.is_dir():
         raise WorkspaceError("draft_upgrade_parent_invalid", "select an external _drafts/<model-id> workspace")
@@ -212,7 +223,7 @@ def fork_draft_contract(path: str | Path, version: str, *, apply: bool = False) 
         raise WorkspaceError("draft_upgrade_parent_invalid", "select the original unversioned draft")
     base_version, new_version = _version_pair(model["version"], version, "contract-upgrade")
     destination = drafts / f"{model_id}-{new_version}"
-    _refuse_symlink(destination, "draft upgrade destination")
+    _refuse_redirected_path(destination, "draft upgrade destination")
     if destination.exists() or is_link_or_junction(destination):
         raise WorkspaceError("workspace_exists", f"draft upgrade destination exists: {destination}")
     for sibling in drafts.iterdir():

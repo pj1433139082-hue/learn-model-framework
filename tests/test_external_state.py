@@ -5,7 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 import hashlib
 import json
+import os
 from pathlib import Path
+import shutil
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -18,7 +21,6 @@ from model_lab.maintenance import (
     fork_maintenance,
     validate_maintenance_lineage,
 )
-from model_lab.path_safety import is_link_or_junction
 from model_lab.scaffolding import ScaffoldRequest, WorkspaceError, scaffold_model
 from model_lab.task_plan import TaskPlanError, read_task_plan, write_task_plan
 from model_lab.workflow_state import (
@@ -268,15 +270,66 @@ class ExternalStateTests(unittest.TestCase):
             external = Path(directory) / "redirect-target"
             external.mkdir()
             metadata = workspace / ".model-lab"
-            def link_detector(path: Path) -> bool:
-                return Path(path) == metadata or is_link_or_junction(Path(path))
+            self.assertTrue(Path(directory).is_absolute())
+            self.assertTrue(metadata.is_relative_to(Path(directory)))
+            self.assertTrue(external.is_relative_to(Path(directory)))
+            junction_created = False
+            try:
+                metadata.symlink_to(external, target_is_directory=True)
+            except OSError as symlink_error:
+                if os.name != "nt":
+                    self.skipTest(
+                        "directory symlink creation is unavailable: "
+                        f"{symlink_error}"
+                    )
+                powershell = shutil.which("pwsh") or shutil.which("powershell")
+                if powershell is None:
+                    self.skipTest(
+                        "Windows symlink creation is unavailable and no "
+                        "PowerShell executable is available for a junction: "
+                        f"{symlink_error}"
+                    )
+                junction_environment = os.environ.copy()
+                junction_environment["MODEL_LAB_TEST_LINK"] = str(metadata)
+                junction_environment["MODEL_LAB_TEST_TARGET"] = str(external)
+                result = subprocess.run(
+                    [
+                        powershell,
+                        "-NoLogo",
+                        "-NoProfile",
+                        "-NonInteractive",
+                        "-Command",
+                        "New-Item -ItemType Junction -Path $env:MODEL_LAB_TEST_LINK "
+                        "-Target $env:MODEL_LAB_TEST_TARGET | Out-Null",
+                    ],
+                    check=False,
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    env=junction_environment,
+                )
+                if result.returncode != 0 or not metadata.exists():
+                    if metadata.exists():
+                        os.rmdir(metadata)
+                    self.skipTest(
+                        "directory symlink creation is unavailable and temporary "
+                        "junction creation failed; "
+                        f"symlink={symlink_error}; junction={result.stderr.strip()}"
+                    )
+                junction_created = True
 
-            with patch("model_lab.scaffolding.is_link_or_junction", side_effect=link_detector):
-                with self.assertRaises(ValueError):
+            try:
+                with self.assertRaises(TaskPlanError) as raised:
                     write_task_plan(
                         workspace, "task-link", mode="assisted", intent="maintain",
                         next_action="Review the baseline.",
                     )
+                self.assertEqual(raised.exception.code, "unsafe_workspace_path")
+            finally:
+                if junction_created:
+                    os.rmdir(metadata)
+                elif metadata.is_symlink():
+                    metadata.unlink()
             self.assertFalse((external / "tasks").exists())
 
     def test_context_identity_stays_out_of_hash_pinned_snapshot(self) -> None:

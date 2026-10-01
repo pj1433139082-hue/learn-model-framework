@@ -8,8 +8,12 @@ import platform
 import struct
 import sys
 import tomllib
-from zipfile import BadZipFile, ZipFile
 
+from model_lab.bounded_archive import (
+    BoundedArchiveError,
+    read_archive_bytes,
+    read_bounded_members,
+)
 from model_lab.environment import framework_identity, read_local_settings
 from model_lab.path_safety import is_link_or_junction
 
@@ -172,27 +176,27 @@ def _external_capability(
     if current.minor != "3.11" or suffix is None:
         return False, "company archive check requires Python 3.11 and a supported target platform", state
     if (archive.resolve().is_relative_to(root) or not archive.is_file()
-            or any(is_link_or_junction(p) for p in (archive, *archive.parents))
-            or archive.stat().st_size > 16 * 1024 * 1024):
+            or any(is_link_or_junction(p) for p in (archive, *archive.parents))):
         return False, "company archive must be a bounded regular file outside the framework", state
     prefix = "infra_model_deploy/resources/infra/311/"
     entries = (prefix + "mlops_deploy_iot_armor2_311.py",
                prefix + "pyarmor_runtime_000000/__init__.py",
                prefix + f"pyarmor_runtime_000000/{target}/pyarmor_runtime{suffix}")
     try:
-        with ZipFile(archive) as bundle:
-            names = bundle.namelist()
-            if len(names) != len(set(names)):
-                return False, "company archive contains duplicate entries", state
-            contents: list[bytes] = []
-            for name in entries:
-                info = bundle.getinfo(name)
-                if info.is_dir() or info.file_size > 2 * 1024 * 1024:
-                    return False, "company archive component is invalid or too large", state
-                contents.append(bundle.read(info))
-    except (BadZipFile, OSError, KeyError, RuntimeError, ValueError):
+        archive_bytes = read_archive_bytes(archive)
+    except BoundedArchiveError as error:
+        if error.reason in {"not_regular_file", "archive_too_large"}:
+            return False, "company archive must be a bounded regular file outside the framework", state
         return False, "company archive is invalid or lacks the requested target runtime", state
-    native = contents[-1]
+    try:
+        contents = read_bounded_members(archive_bytes, entries)
+    except BoundedArchiveError as error:
+        if error.reason == "duplicate_entry":
+            return False, "company archive contains duplicate entries", state
+        if error.reason in {"member_invalid", "member_too_large"}:
+            return False, "company archive component is invalid or too large", state
+        return False, "company archive is invalid or lacks the requested target runtime", state
+    native = contents[entries[-1]]
     if target == "linux_x86_64":
         native_valid = (len(native) >= 20 and native[:6] == b"\x7fELF\x02\x01"
                         and struct.unpack_from("<H", native, 18)[0] == 62)
@@ -200,7 +204,7 @@ def _external_capability(
         native_valid = native.startswith(b"MZ")
     if not native_valid:
         return False, "company archive native file does not match the requested platform format", state
-    state.update(status="files_verified", archive_sha256=hashlib.sha256(archive.read_bytes()).hexdigest())
+    state.update(status="files_verified", archive_sha256=hashlib.sha256(archive_bytes).hexdigest())
     return True, "external archive files match the target; model digests, import and connectivity still need model checks", state
 
 

@@ -10,13 +10,15 @@ from packaging.version import InvalidVersion, Version
 import yaml  # type: ignore[import-untyped]
 
 from model_lab.manifest import ManifestError, validate_manifest
-from model_lab.path_safety import is_link_or_junction
+from model_lab.path_safety import (
+    first_link_or_junction_component,
+    is_link_or_junction,
+)
 from model_lab.scaffolding import (
     TEMPLATE_VERSION,
     ScaffoldRequest,
     WorkspaceError,
     _normalize_request,
-    _refuse_symlink,
     _render_files,
     _write_workspace,
     ensure_local_filesystem_path,
@@ -26,6 +28,15 @@ from model_lab.scaffolding import (
 MAINTENANCE_WORKFLOW_ID = "maintenance-lifecycle-v1"
 CONTRACT_UPGRADE_WORKFLOW_ID = "contract-upgrade-lifecycle-v1"
 CHANGE_KINDS = {"behavior-unchanged", "contract-upgrade"}
+
+
+def _refuse_redirected_path(path: Path, label: str) -> None:
+    component = first_link_or_junction_component(path)
+    if component is not None:
+        raise WorkspaceError(
+            "unsafe_workspace_path",
+            f"{label} must not pass through a link or junction: {component}",
+        )
 
 
 def _object(document: object, key: str) -> Mapping[str, Any]:
@@ -50,7 +61,7 @@ def _safe_child(root: Path, relative: object, label: str) -> Path:
     if not parts or PurePosixPath(relative).is_absolute() or any(part in {".", ".."} for part in parts):
         raise WorkspaceError("maintenance_parent_invalid", f"{label} is unsafe")
     candidate = root.joinpath(*parts)
-    _refuse_symlink(candidate, label)
+    _refuse_redirected_path(candidate, label)
     try:
         candidate.relative_to(root)
     except ValueError as error:
@@ -163,7 +174,7 @@ def fork_maintenance(
         raise WorkspaceError(getattr(error, "code", "unsafe_workspace_path"), str(error)) from error
     manifest = parent / "model.yaml"
     models_root = parent.parent
-    _refuse_symlink(manifest, "released model")
+    _refuse_redirected_path(manifest, "released model")
     if parent.name == "_drafts" or models_root.name == "_drafts" or not manifest.is_file():
         raise WorkspaceError("maintenance_parent_invalid", "select one released workspace outside a _drafts directory")
     document = _load_released(manifest)
@@ -179,7 +190,7 @@ def fork_maintenance(
             "maintenance fork cannot infer a released model's online serving adapter",
         )
     destination = models_root / "_drafts" / f"{model_id}-{new_version}"
-    _refuse_symlink(destination, "maintenance destination")
+    _refuse_redirected_path(destination, "maintenance destination")
     if destination.exists() or is_link_or_junction(destination):
         raise WorkspaceError("workspace_exists", f"maintenance workspace already exists: {destination}")
     drafts = models_root / "_drafts"
@@ -415,7 +426,7 @@ def validate_maintenance_lineage(workspace: Path) -> tuple[bool, str, Path | Non
         return False, "maintenance base directory is invalid", None
     parent = workspace.parent.parent / base_directory
     try:
-        _refuse_symlink(parent / "model.yaml", "maintenance parent")
+        _refuse_redirected_path(parent / "model.yaml", "maintenance parent")
         base = _load_released(parent / "model.yaml")
         snapshot = _snapshot(parent, base)
         if _sha256(parent / "model.yaml") != lineage.get("base_manifest_sha256") or _sha256(snapshot) != lineage.get("base_snapshot_sha256"):

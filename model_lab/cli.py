@@ -55,6 +55,7 @@ from model_lab.workflow_state import (
 from model_lab.environment import configured_models_root, ensure_external_workspace, framework_root, framework_identity
 from model_lab.setup import setup_workspace
 from model_lab.task_plan import read_task_plan, write_task_plan
+from model_lab.record_recovery import framework_recovery_command, refresh_snapshot
 
 
 def _configured_models_root(value: str | None) -> Path:
@@ -495,7 +496,7 @@ def main(arguments: Sequence[str] | None = None) -> int:
             print(json.dumps(result.as_dict(), ensure_ascii=False, sort_keys=True))
         else:
             print(result.as_text())
-        return 0 if result.status == "verified" else 4
+        return 2 if result.local_record_incomplete else 0 if result.status == "verified" else 4
 
     if options.command in {"new", "maintain", "draft-fork", "status", "advance"}:
         try:
@@ -557,26 +558,33 @@ def main(arguments: Sequence[str] | None = None) -> int:
             else:
                 print(f"model-lab: {error}", file=sys.stderr)
             return 2
+        record_result = None
+        recovery_command: tuple[str, ...] = ()
         if options.command in {"new", "maintain", "draft-fork"} and workspace_result.status == "created":
-            try:
-                write_snapshot(workspace_result.destination)
-            except (OSError, ValueError, yaml.YAMLError) as error:
-                print(f"model-lab: workspace created but workflow snapshot failed: {error}", file=sys.stderr)
-                return 2
+            record_path = workspace_result.destination
         elif options.command == "advance" and workspace_result.applied:
-            try:
-                write_snapshot(workspace_result.manifest)
-            except (OSError, ValueError, yaml.YAMLError) as error:
-                print(f"model-lab: lifecycle advanced but workflow snapshot failed: {error}", file=sys.stderr)
-                return 2
+            record_path = workspace_result.manifest
+        else:
+            record_path = None
+        if record_path is not None:
+            record_result = refresh_snapshot(record_path)
+            recovery_command = framework_recovery_command("context", str(record_path), "--write", "--format", "json")
+            if not record_result.complete:
+                exit_code = 2
+                print(record_result.as_text(command=recovery_command), file=sys.stderr)
         if options.format == "json":
+            payload = workspace_result.as_dict()
+            if record_result is not None:
+                payload.update(record_result.details(action="refresh_snapshot", command=recovery_command))
             print(
                 json.dumps(
-                    workspace_result.as_dict(), ensure_ascii=False, sort_keys=True
+                    payload, ensure_ascii=False, sort_keys=True
                 )
             )
         else:
             print(workspace_result.as_text())
+            if record_result is not None and record_result.complete and record_result.snapshot_attempts > 1:
+                print(record_result.as_text(command=recovery_command))
         return exit_code
 
     if options.command == "release-gate":
@@ -723,7 +731,7 @@ def main(arguments: Sequence[str] | None = None) -> int:
                         owner=options.owner,
                         company_package=options.company_package or "",
                     )
-                    exit_code = 0 if result.status == "published" else 4
+                    exit_code = 2 if result.local_record_incomplete else 0 if result.status == "published" else 4
         except ContractViolationError as error:
             if options.format == "json":
                 print(

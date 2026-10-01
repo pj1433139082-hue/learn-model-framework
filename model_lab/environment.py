@@ -16,7 +16,10 @@ from functools import lru_cache
 from typing import Any
 
 from model_lab import __version__
-from model_lab.path_safety import is_link_or_junction
+from model_lab.path_safety import (
+    first_link_or_junction_component,
+    is_link_or_junction,
+)
 
 
 LOCAL_SETTINGS_NAME = ".model-lab.local.json"
@@ -266,21 +269,12 @@ def _absolute_path_without_links(path: str | Path) -> Path:
     absolute = expanded if expanded.is_absolute() else Path.cwd() / expanded
     _reject_nonlocal_path(absolute, raw_value)
 
-    component = Path(absolute.anchor)
-    for part in absolute.parts[1:]:
-        if part in {"", "."}:
-            continue
-        if is_link_or_junction(component):
-            raise EnvironmentError(
-                "unsafe_workspace_path",
-                f"workspace path must not pass through a link or junction: {component}",
-            )
-        component = component.parent if part == ".." else component / part
-        if is_link_or_junction(component):
-            raise EnvironmentError(
-                "unsafe_workspace_path",
-                f"workspace path must not pass through a link or junction: {component}",
-            )
+    component = first_link_or_junction_component(absolute)
+    if component is not None:
+        raise EnvironmentError(
+            "unsafe_workspace_path",
+            f"workspace path must not pass through a link or junction: {component}",
+        )
     normalized = Path(os.path.abspath(absolute))
     if is_link_or_junction(normalized):
         raise EnvironmentError(

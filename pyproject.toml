@@ -14,7 +14,7 @@ test = [
   "mlflow==2.22.2",
   "cloudpickle==3.1.2",
   "numpy==2.3.3",
-  "pandas==2.3.3",
+  "pandas==3.0.6",
 ]
 publish = ["boto3==1.43.103"]
 

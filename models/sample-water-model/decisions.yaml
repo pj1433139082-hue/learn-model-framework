@@ -1,0 +1,100 @@
+schema_version: "1.0"
+model_id: "sample-water-model"
+owner: "demo"
+decisions:
+  - id: requirements-context
+    stage: requirements
+    blocks_transition: specified
+    level: ASK
+    required: true
+    question: "模型解决什么问题、由谁使用、多久执行一次，哪些事项不在范围内？"
+    recommendation: "依据水厂进水水质与流量特征前馈估算投药量，由工艺工程师与自控运维使用，10分钟间隔执行，不包含直接PLC控制下发。"
+    status: confirmed
+    answer: "依据水厂进水水质与流量特征前馈估算投药量，由工艺工程师与自控运维使用，10分钟间隔执行，不包含直接PLC控制下发。"
+    confirmed_by: "demo"
+    confirmed_at: "2026-10-12T10:00:00+08:00"
+    evidence: "model-spec.md#1-业务背景与目标"
+  - id: requirements-io-contract
+    stage: requirements
+    blocks_transition: specified
+    level: ASK
+    required: true
+    question: "模型输入和输出分别是什么，它们的类型、单位和业务含义是什么？"
+    recommendation: "输入为进水流量、进水COD、进水氨氮；输出为混凝剂投加量与碳源投加量。"
+    status: confirmed
+    answer: "输入为进水流量、进水COD、进水氨氮；输出为混凝剂投加量与碳源投加量。"
+    confirmed_by: "demo"
+    confirmed_at: "2026-10-12T10:00:00+08:00"
+    evidence: "model-spec.md#3-输入输出契约定义"
+  - id: requirements-acceptance
+    stage: requirements
+    blocks_transition: specified
+    level: CONFIRM
+    required: true
+    question: "哪些可验证条件满足后，模型才算达到业务验收标准？"
+    recommendation: "通过标准工况、零流量停机和高碳低氮测试用例，非负截断保护，单测 100% 通过。"
+    status: confirmed
+    answer: "通过标准工况、零流量停机和高碳低氮测试用例，非负截断保护，单测 100% 通过。"
+    confirmed_by: "demo"
+    confirmed_at: "2026-10-12T10:00:00+08:00"
+    evidence: "model-spec.md#4-验收基准与测试用例"
+  - id: design-model-logic
+    stage: design
+    blocks_transition: specified
+    level: CONFIRM
+    required: true
+    question: "采用哪套公式或模型逻辑，为什么适合当前业务问题？"
+    recommendation: "采用化学反应当量比与脱氮反硝化碳氮比需缺量机理公式，具有高可解释性与确定性。"
+    status: confirmed
+    answer: "采用化学反应当量比与脱氮反硝化碳氮比需缺量机理公式，具有高可解释性与确定性。"
+    confirmed_by: "demo"
+    confirmed_at: "2026-10-12T10:00:00+08:00"
+    evidence: "model-spec.md#2-算法机理与公式设计"
+  - id: design-parameters-measurements
+    stage: design
+    blocks_transition: specified
+    level: CONFIRM
+    required: true
+    question: "参数、单位、来源、可调性以及测点和数据口径是否已经确定？"
+    recommendation: "已确定基础混凝剂单耗 25mg/L，目标反硝化碳氮比 4.5，复合碳源 COD 当量 1.2。"
+    status: confirmed
+    answer: "已确定基础混凝剂单耗 25mg/L，目标反硝化碳氮比 4.5，复合碳源 COD 当量 1.2。"
+    confirmed_by: "demo"
+    confirmed_at: "2026-10-12T10:00:00+08:00"
+    evidence: "model-spec.md#2-算法机理与公式设计"
+  - id: design-exception-strategy
+    stage: design
+    blocks_transition: specified
+    level: CONFIRM
+    required: true
+    question: "缺失值、异常值和业务边界应采用什么处理策略？"
+    recommendation: "缺失关键字段直接报错阻断，流量小于等于0投加量归零，输出非负截断。"
+    status: confirmed
+    answer: "缺失关键字段直接报错阻断，流量小于等于0投加量归零，输出非负截断。"
+    confirmed_by: "demo"
+    confirmed_at: "2026-10-12T10:00:00+08:00"
+    evidence: "model-spec.md#23-异常值与物理边界截断"
+  - id: build-data-quality-treatment
+    stage: build
+    blocks_transition: built
+    level: CONFIRM
+    required: true
+    question: "数据清洗、质量检查和异常处理是如何实现的？"
+    recommendation: "通过 pandas clip 进行非负截断与缺失字段校验。"
+    status: confirmed
+    answer: "通过 pandas clip 进行非负截断与缺失字段校验。"
+    confirmed_by: "demo"
+    confirmed_at: "2026-10-12T10:00:00+08:00"
+    evidence: "src/model.py"
+  - id: validate-metrics-review
+    stage: validate
+    blocks_transition: validated
+    level: CONFIRM
+    required: true
+    question: "业务指标是否达到预期，谁完成了审查？"
+    recommendation: "单测 100% 覆盖关键业务分支与边界异常，完成离线复核。"
+    status: confirmed
+    answer: "单测 100% 覆盖关键业务分支与边界异常，完成离线复核。"
+    confirmed_by: "demo"
+    confirmed_at: "2026-10-12T10:00:00+08:00"
+    evidence: "validation/validation-report.md"

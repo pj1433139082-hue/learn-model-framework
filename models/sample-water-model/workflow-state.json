@@ -1,0 +1,47 @@
+{
+  "decisions": {
+    "open_ids": [],
+    "source_sha256": "e970d27cd47105a158b11b168e84f8e305d26280fe9c665c6ab80b5c694eed00",
+    "status": "recorded",
+    "summary": {
+      "confirmed_count": 8,
+      "open_count": 0,
+      "sha256": "a8f28b4810063465dc83d0831b35f562d599974803c1af169eaa57a3067f548d",
+      "superseded_count": 0,
+      "valid": true
+    }
+  },
+  "model": {
+    "id": "sample-water-model",
+    "lifecycle_state": "validated",
+    "name": "标准水厂前馈投药量计算样板模型",
+    "owner": "demo",
+    "target": "cpu-iot",
+    "version": "0.1.0"
+  },
+  "publication": {
+    "evidence": null,
+    "experiment": null,
+    "live_platform_status": "not_queried",
+    "run_id": null,
+    "status": "unknown"
+  },
+  "schema_version": "1.0",
+  "scope": "generated_repository_snapshot_not_live_platform",
+  "serving": {
+    "binding": "input-bindings.yaml",
+    "binding_count": 3,
+    "binding_sha256": "c6c8bede94e2296a9e4129feb0a1ffbea8dfc0dfe748b861fb5b455aad66aed1",
+    "mode": "point-code",
+    "point_count": 0,
+    "point_fields": [
+      "influent_flow",
+      "influent_cod",
+      "influent_nh3n"
+    ],
+    "point_metadata": "incomplete"
+  },
+  "sources": {
+    "model.yaml": "8d8cfe55ffe1fe45c30a9ae2463d74a44d00a33adec69c8a72c37af31fbb1375"
+  }
+}

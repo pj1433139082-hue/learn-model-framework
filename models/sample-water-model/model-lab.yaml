@@ -1,0 +1,6 @@
+schema_version: "1.0"
+template:
+  id: new-model
+  version: "new-model-v2"
+workflow:
+  id: "model-lifecycle-v1"

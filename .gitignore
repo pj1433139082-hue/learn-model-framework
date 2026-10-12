@@ -1,5 +1,8 @@
 # Private assets never belong in this shared framework checkout.
-/models/
+/models/*
+!/models/README.md
+!/models/sample-water-model/
+/models/**/release-bundle/
 /data/
 /artifacts/
 /framework/

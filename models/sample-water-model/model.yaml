@@ -1,0 +1,62 @@
+schema_version: '1.0'
+compatibility:
+  model_lab: '>=0.1.0,<1.0.0'
+model:
+  id: sample-water-model
+  name: 标准水厂前馈投药量计算样板模型
+  version: 0.1.0
+  lifecycle_state: validated
+  owner: demo
+target:
+  kind: cpu-iot
+  environment:
+    operating_system: linux
+    architecture: x86_64
+    python: '>=3.11,<3.12'
+    mlflow: ==2.22.2
+    package_format: mlflow-pyfunc
+    dependency_lock: runtime/requirements.lock.txt
+    native_runtime:
+      kind: none
+contract:
+  inputs:
+  - name: influent_flow
+    type: number
+    unit: m3/h
+  - name: influent_cod
+    type: number
+    unit: mg/L
+  - name: influent_nh3n
+    type: number
+    unit: mg/L
+  outputs:
+  - name: coagulant_dosage
+    type: number
+    unit: kg/h
+  - name: carbon_source_dosage
+    type: number
+    unit: kg/h
+source:
+  digest_mode: utf8-lf
+  entrypoint: src/model.py
+  entrypoint_sha256: 6a25bd9c32721f0ad6038d34f97b34dcfef370898cc441365eecb1dce1ae2ef3
+  notebook: notebooks/model.ipynb
+  notebook_sha256: b60498606940208c148477ddaa9445ed2e5d64046287e3f138e3ddc202470da9
+  documentation: model-spec.md
+  documentation_sha256: 2e3885905b1e2eaf1f1b33d3737a39cc719c4f0a94fd1ffff55928a1d468e194
+serving:
+  mode: point-code
+  factory_field: factory_code
+  point_fields:
+  - influent_flow
+  - influent_cod
+  - influent_nh3n
+  start_field: target_date
+  time:
+    strategy: target-date-day
+    timezone: Asia/Shanghai
+    iot_timestamp_timezone: UTC
+  rolling_window: 1d
+  interval: 10min
+  binding: input-bindings.yaml
+artifacts: []

@@ -23,7 +23,7 @@ _ROOT_FILES = frozenset({
 })
 _SOURCE_ROOTS = frozenset({
     ".codex", ".github", ".skillshare", ".vscode", "docs", "model_lab",
-    "model_lab_service_runtime", "scripts", "tests",
+    "model_lab_service_runtime", "scripts", "tests", "models",
 })
 _FORBIDDEN_SUFFIXES = frozenset({
     ".7z", ".arrow", ".avro", ".bin", ".bz2", ".ckpt", ".csv",

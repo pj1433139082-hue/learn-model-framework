@@ -1,0 +1,20 @@
+schema_version: '1.0'
+model_id: sample-water-model
+version: 0.1.0
+factory: DEMO_PLANT_01
+bindings:
+- target_field: influent_flow
+  point_code: DEMO_WWTP_INFLOW_01
+  signal_name: 进水总流量
+  unit: m3/h
+  aggregation: latest
+- target_field: influent_cod
+  point_code: DEMO_WWTP_COD_01
+  signal_name: 进水COD在线仪表
+  unit: mg/L
+  aggregation: latest
+- target_field: influent_nh3n
+  point_code: DEMO_WWTP_NH3N_01
+  signal_name: 进水氨氮在线仪表
+  unit: mg/L
+  aggregation: latest

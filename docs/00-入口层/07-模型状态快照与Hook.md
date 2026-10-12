@@ -1,15 +1,49 @@
-# 版本状态索引与 Hook
+---
+name: 模型状态快照与Hook
+description: 每版本状态 JSON、会话级最小加载及无 hook 后备入口
+tags: [kind/guide, topic/mlops, entry]
+---
 
-每个私有模型版本的 `workflow-state.json` 由 `model-lab context <工作区> --write` 从 `model.yaml`、绑定和回执重建。`--check` 只读报漂移；不要手改 JSON。`context --all` 需要 `--models-root` 或 `MODEL_LAB_MODELS_ROOT`，且该目录必须在框架仓库外。
+# 模型状态快照与 Hook
 
-Codex hook 只在本次会话已唯一定位模型时提示状态与最小文档；不会写模型、也不会在仓库内保存“当前模型”指针。没有配置私有目录、hook 不受信任或智能体不支持 hook 时，直接按 `AGENTS.md`、入口页、`context/status` 操作，流程不被阻断。
+每个模型版本目录的 `workflow-state.json` 是生成索引，供人和智能体快速判断
+“这个版本当前处于哪一阶段、测点资料是否适用、仓库里有什么发布记录”。
+事实仍以同目录 `model.yaml`、`decisions.yaml`、`input-bindings.yaml` 和
+`validation/publications/` 的逐 Run 回执为准。不要手改 JSON，也不要把它
+当作公司平台实时状态。
 
-`context` 同时报告实际框架根目录、版本、Git 提交/修改状态与绝对文档指针。即使从私有模型目录调用，也按这些指针读取维护框架的文档，不从旧模型备份中的同名 `docs/` 猜入口。
+```powershell
+model-lab context models/_drafts/<目录名> --task build
+model-lab context models/_drafts/<目录名> --write
+model-lab context --all --check
+```
 
-生成状态索引不保存交互档位；任务续办另用 `task-plan <工作区> --task-id <任务ID>`。其 JSON 只保留任务、模型身份、框架版本/提交、档位、下一步与待答编号；不保留凭据、机器目录或永久远端授权。同一模型可有多个任务，必须显式选择任务 ID。当前事实仍以 `context/status` 重查为准。
+第一条只读返回该模型版本的当前事实和本任务最少需看的文档；第二条重新生成
+同版本 JSON；第三条供同事或 CI 查全库漂移。正常新建、维护分叉、阶段推进和
+成功发布由 CLI 自动刷新，无需在每个步骤前询问。
 
-## 操作完成但本地记录不完整
+JSON 的 `model.lifecycle_state` 是本地门禁，不是上传状态。
+`publication.status=verified_repository_receipt` 只证明保存过已完成 Run、
+远端下载摘要和平台路径预测均通过的机器回执；`live_platform_status` 仍为
+`not_queried`。旧版 `model.yaml` 中的 Run 只标
+`recorded_legacy_unverified`；仅有 Markdown 回执、缺少机器回执时标
+`unknown`。这不会否定人工记录，但防止把历史叙述当作本次实时核验。
+已有 Run 若只有文字回执，可在 Linux 3.11 上执行
+`model-lab verify-publication <model.yaml> --experiment <实验名> --run-id <Run ID> --company-package <公司ZIP>`：
+它只读查询远端实验和 Run、下载核对固定实包并重载预测，全部通过后才在本地
+补逐 Run 机器回执和状态 JSON；预测会执行该已验收模型并读取 IoT，失败不会
+创建 Run 或上传制品。
 
-创建、分叉或状态推进已完成后，索引 I/O 写入失败会安全补写一次；不安全路径或无效事实不会重试。补写仍失败时命令返回 2，但保留原操作结果和可解析 JSON：`completion.operation=completed`、`completion.local_record=incomplete`、`completion.repeat_operation=false`，以及 `recovery.command` 参数列表。不要仅凭非零退出码重做创建、推进或上传。
+`serving.point_metadata=not_applicable` 是数值入参模型的正常状态。测点数组
+模型使用 `input-bindings.yaml` 保存设施名称、设备名称、数采点位编号、信号
+编码、信号名称、应有信号和完整取数编码；状态 JSON 只放绑定文件路径、摘要
+与完整度，不复制一套可能漂移的点表。老版绑定缺独立点位编号或信号编码时
+会标 `legacy_code_only`，不是伪装成 2.1 已补齐。
 
-先处理实际文件权限、磁盘、路径或事实问题，再通过固定启动器执行 `context <工作区> --write`，随后 `context <工作区> --check` 核对索引；不手改 JSON。若缺的是发布回执，仅重建索引不够，按 [上传边界](../10-流程层/10-部署教程-集团MLflow.md) 核验同一个 Run。恢复不增加用户审批，也不改变模型生命周期。见 [ADR 0019](../adr/0019-已完成操作与本地记录恢复分离.md)。
+仓库已交付只读 Codex hook；它在会话开始、压缩恢复和新提问时尝试定位明确的
+模型 ID＋语义版本，提供最小文档指针。首次出现多个候选版本时应只问一次，
+不能猜；会话焦点保存在本机临时目录，不进入 Git。Codex 需要先信任仓库 hook；
+如果没有加载 hook，直接从 `AGENTS.md` 和本页进入，执行 `model-lab context`
+与 `model-lab status`，流程仍完整。hook 既不上传，也不替用户回答业务决定。
+
+依据：[ADR 0018](../adr/0018-版本状态快照与会话级Hook.md)。

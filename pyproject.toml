@@ -7,7 +7,7 @@ name = "model-lab-framework"
 dynamic = ["version"]
 description = "Reusable Python 3.11 model laboratory workflow and templates"
 requires-python = ">=3.11,<3.12"
-dependencies = ["packaging>=24,<26", "PyYAML>=6,<7"]
+dependencies = ["packaging>=24,<27", "PyYAML>=6,<7"]
 
 [project.optional-dependencies]
 test = [

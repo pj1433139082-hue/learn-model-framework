@@ -271,8 +271,8 @@
   <line x1="406" y1="527" x2="714" y2="527" stroke="rgba(46,90,168,0.2)" stroke-width="0.8"/>
 
   <circle cx="414" cy="542" r="2" fill="#2e5aa8"/>
-  <text x="422" y="545" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif" font-weight="600">现场数据输入形态</text>
-  <text x="422" y="555" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">离线 Excel 表格 (时间戳/多列) vs 真实测点数组 (Point-codes)</text>
+  <text x="422" y="545" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif" font-weight="600">数据源策略与防偷懒门禁</text>
+  <text x="422" y="555" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">动态拉取 (live-iot + 回执) vs 离线基准 · 杜绝本地文件偷懒</text>
 
   <circle cx="414" cy="572" r="2" fill="#2e5aa8"/>
   <text x="422" y="575" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif" font-weight="600">计算频率与调度周期</text>
@@ -283,11 +283,11 @@
   <text x="422" y="615" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">双探头均值 (mean) / 极值 (max/min) / 单探头 / 主备回退</text>
 
   <circle cx="414" cy="632" r="2" fill="#2e5aa8"/>
-  <text x="422" y="635" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif" font-weight="600">算法路线与依赖纯洁度</text>
-  <text x="422" y="645" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">纯机理公式 vs 统计/机器学习 (.pkl) · 严禁未授权私有包</text>
+  <text x="422" y="635" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif" font-weight="600">双速运行架构与依赖纯洁度</text>
+  <text x="422" y="645" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">Windows 本地极速开发 (&lt;0.1s) / WSL 按需发布保真预检</text>
 
   <rect x="406" y="654" width="308" height="14" rx="2" fill="rgba(46,90,168,0.05)"/>
-  <text x="560" y="664" fill="#2e5aa8" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">RULE: 点位、时间步长与聚合口径必须固化写入 model.yaml</text>
+  <text x="560" y="664" fill="#2e5aa8" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">RULE: 必须生成 iot-pull-receipt · 支持 Windows 极速 / WSL 保真双速</text>
 
   <!-- ── MATRIX CARD 3: STAGE 1-5 现场工艺与极端工况 (开放探讨) ────── -->
   <rect x="744" y="468" width="328" height="206" rx="6" fill="#ffffff" stroke="#bf4520" stroke-width="1.2"/>

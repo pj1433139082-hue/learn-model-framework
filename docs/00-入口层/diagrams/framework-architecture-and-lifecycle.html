@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>水务模型开发框架全景架构与生命周期状态机 · Architecture</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Noto+Serif+SC:wght@400;600&family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --color-paper:       #f5f5f5;
+      --color-paper-2:     #ececec;
+      --color-ink:         #2d3142;
+      --color-ink-strong:  #111111;
+      --color-muted:       #4f5d75;
+      --color-soft:        #5a6580;
+      --color-rule:        rgba(45,49,66,0.12);
+      --color-rule-solid:  #bfc0c0;
+      --color-accent:      #bf4520;
+      --color-accent-tint: rgba(191,69,32,0.08);
+      --color-link:        #2e5aa8;
+      --font-sans:   'Geist', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+      --font-serif:  'Instrument Serif', 'Noto Serif SC', 'Times New Roman', serif;
+      --font-mono:   'Geist Mono', ui-monospace, 'Consolas', monospace;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      padding: 3rem 2rem;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* ── Header ─────────────────────────────────────────────────── */
+    .header {
+      margin-bottom: 2.25rem;
+    }
+
+    .header-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.6rem;
+    }
+
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.85rem, 3.2vw + 1rem, 2.6rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.12;
+      color: var(--color-ink);
+      margin-bottom: 0.6rem;
+    }
+
+    .subtitle {
+      font-family: var(--font-sans);
+      font-size: 0.98rem;
+      line-height: 1.6;
+      color: var(--color-muted);
+      max-width: 68ch;
+    }
+
+    /* ── Diagram scroll wrapper ──────────────────────────────────── */
+    .diagram-scroll {
+      width: 100%;
+      overflow-x: auto;
+      margin-bottom: 2.5rem;
+      background: var(--color-paper);
+      border: 1px solid var(--color-rule);
+      border-radius: 8px;
+      padding: 1rem 0.5rem;
+    }
+
+    svg {
+      width: 100%;
+      min-width: 1040px;
+      height: auto;
+      display: block;
+    }
+
+    /* ── Summary cards ───────────────────────────────────────────── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr 0.95fr;
+      gap: 1.25rem;
+      margin-bottom: 2.5rem;
+    }
+
+    @media (max-width: 860px) {
+      .cards-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: #ffffff;
+      border: 1px solid var(--color-rule);
+      border-radius: 6px;
+      padding: 1.25rem 1.4rem;
+    }
+
+    .card-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .card h3 {
+      font-family: var(--font-serif);
+      font-size: 1.35rem;
+      font-weight: 400;
+      color: var(--color-ink);
+      margin-bottom: 0.5rem;
+      line-height: 1.2;
+    }
+
+    .card p {
+      font-size: 0.88rem;
+      color: var(--color-muted);
+      line-height: 1.55;
+    }
+
+    .card ul {
+      margin-top: 0.6rem;
+      padding-left: 1.1rem;
+      font-size: 0.84rem;
+      color: var(--color-soft);
+      line-height: 1.6;
+    }
+
+    /* ── Colophon ────────────────────────────────────────────────── */
+    .footer {
+      border-top: 1px solid var(--color-rule);
+      padding-top: 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--color-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <p class="header-eyebrow">Architecture &middot; Water Model Governance</p>
+      <h1>双运行时解耦架构与六阶段生命周期推进流</h1>
+      <p class="subtitle">
+        展示水务算法模型端到端工程治理：Windows 本地开发控制面与 Linux 容器生产实包严格解耦，
+        由四大自动化硬门禁与双轴代码审查构筑确定性防护网，严禁未授权或越权发布。
+      </p>
+    </div>
+
+    <div class="diagram-scroll">
+      <svg viewBox="0 0 1120 540" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="framework-arch-title framework-arch-desc">
+        <title id="framework-arch-title">水务模型框架双运行时解耦与质量门禁全景架构</title>
+        <desc id="framework-arch-desc">架构图展示本地 Windows 控制面生成规格并驱动开发，Linux WSL 环境构建独立 MLflow 实包并通过预测验证，最终交由四道硬门禁与双轴审查，经授权向生产发布。</desc>
+
+        <defs>
+          <pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse">
+            <circle cx="1" cy="1" r="0.9" fill="rgba(45,49,66,0.08)"/>
+          </pattern>
+          <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/>
+          </marker>
+          <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#bf4520"/>
+          </marker>
+          <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/>
+          </marker>
+        </defs>
+
+        <!-- Paper background & Dot grid -->
+        <rect width="100%" height="100%" fill="#f5f5f5"/>
+        <rect width="100%" height="100%" fill="url(#dots)" opacity="0.65"/>
+
+        <!-- ── ZONE 1: Windows Control Plane (Top Left) ─────────────── -->
+        <rect x="40" y="56" width="668" height="184" rx="8"
+              fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+        <rect x="56" y="62" width="204" height="14" rx="2" fill="#f5f5f5"/>
+        <text x="158" y="73" fill="#5a6580" font-size="7.5" font-family="'Geist Mono', monospace"
+              text-anchor="middle" letter-spacing="0.14em">WINDOWS DEV CONTROL PLANE</text>
+
+        <!-- ── ZONE 2: Linux Target Runtime (Bottom Left) ──────────── -->
+        <rect x="40" y="276" width="668" height="160" rx="8"
+              fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+        <rect x="56" y="282" width="194" height="14" rx="2" fill="#f5f5f5"/>
+        <text x="153" y="293" fill="#5a6580" font-size="7.5" font-family="'Geist Mono', monospace"
+              text-anchor="middle" letter-spacing="0.14em">LINUX TARGET RUNTIME (WSL)</text>
+
+        <!-- ── ZONE 3: Assurance & Production (Right Tier) ─────────── -->
+        <rect x="744" y="56" width="336" height="380" rx="8"
+              fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+        <rect x="760" y="62" width="190" height="14" rx="2" fill="#f5f5f5"/>
+        <text x="855" y="73" fill="#5a6580" font-size="7.5" font-family="'Geist Mono', monospace"
+              text-anchor="middle" letter-spacing="0.14em">ASSURANCE &amp; PRODUCTION</text>
+
+        <!-- ── CONNECTORS (Drawn first behind nodes) ───────────────── -->
+        <!-- 1. Node 1 -> Node 2 (Control Plane scaffold) -->
+        <line x1="224" y1="136" x2="284" y2="136" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <!-- 2. Node 2 -> Node 3 (Contract to Source) -->
+        <line x1="444" y1="136" x2="504" y2="136" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <!-- 3. Node 3 -> Node 6 (Windows Source to Hard Gates) -->
+        <line x1="664" y1="136" x2="820" y2="136" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+        <!-- 4. Node 1 -> Node 4 (Cross-runtime build trigger, orthogonal elbow) -->
+        <path d="M 144,168 V 248 Q 144,256 152,256 H 246 Q 254,256 254,264 V 328"
+              fill="none" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+
+        <!-- 5. Node 4 -> Node 5 (Linux Service to Preflight) -->
+        <line x1="334" y1="360" x2="394" y2="360" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+        <!-- 6. Node 5 -> Node 6 (Linux Preflight to Hard Gates, orthogonal elbow) -->
+        <path d="M 554,360 H 712 Q 720,360 720,352 V 164 Q 720,156 728,156 H 820"
+              fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+        <!-- 7. Node 6 -> Node 7 (Hard Gates to Review) -->
+        <line x1="910" y1="168" x2="910" y2="216" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+        <!-- 8. Node 7 -> Node 8 (Review to MLflow Production, Coral focal) -->
+        <line x1="910" y1="280" x2="910" y2="328" stroke="#bf4520" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+
+        <!-- ── CONNECTOR LABELS (with opaque paper masks) ─────────── -->
+        <!-- Label 1: SCAFFOLD -->
+        <rect x="234" y="130" width="40" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="254" y="139" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace"
+              text-anchor="middle" letter-spacing="0.08em">SCAFFOLD</text>
+
+        <!-- Label 2: TDD SPEC -->
+        <rect x="454" y="130" width="40" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="474" y="139" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace"
+              text-anchor="middle" letter-spacing="0.08em">TDD SPEC</text>
+
+        <!-- Label 3: STATIC AUDIT -->
+        <rect x="718" y="130" width="56" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="746" y="139" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace"
+              text-anchor="middle" letter-spacing="0.08em">AUDIT</text>
+
+        <!-- Label 4: BUNDLE BUILD -->
+        <rect x="174" y="250" width="60" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="204" y="259" fill="#2e5aa8" font-size="7.5" font-family="'Geist Mono', monospace"
+              text-anchor="middle" letter-spacing="0.08em">BUNDLE BUILD</text>
+
+        <!-- Label 5: PREFLIGHT -->
+        <rect x="340" y="354" width="48" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="364" y="363" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace"
+              text-anchor="middle" letter-spacing="0.08em">PREFLIGHT</text>
+
+        <!-- Label 6: PREDICT OK -->
+        <rect x="694" y="246" width="52" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="720" y="255" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace"
+              text-anchor="middle" letter-spacing="0.08em">PREDICT OK</text>
+
+        <!-- Label 7: 4 GATES PASS -->
+        <rect x="880" y="186" width="60" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="910" y="195" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace"
+              text-anchor="middle" letter-spacing="0.08em">4 GATES PASS</text>
+
+        <!-- Label 8: AUTH PUBLISH -->
+        <rect x="880" y="298" width="60" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="910" y="307" fill="#bf4520" font-size="7.5" font-family="'Geist Mono', monospace"
+              text-anchor="middle" letter-spacing="0.08em">AUTH PUBLISH</text>
+
+        <!-- ── NODES (Opaque mask + border + tag + typography) ────── -->
+
+        <!-- Node 1: model-lab CLI (Windows Control Plane) -->
+        <rect x="64" y="104" width="160" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="64" y="104" width="160" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="72" y="112" width="28" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.35)" stroke-width="0.8"/>
+        <text x="86" y="121" fill="#2d3142" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CLI</text>
+        <text x="216" y="160" fill="rgba(45,49,66,0.06)" font-size="28" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="end">01</text>
+        <text x="144" y="138" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">model-lab CLI</text>
+        <text x="144" y="154" fill="#4f5d75" font-size="8.5" font-family="'Geist Mono', monospace" text-anchor="middle">doctor · new · advance</text>
+        
+        <!-- Node 2: Contract Manifests (Windows Control Plane) -->
+        <rect x="284" y="104" width="160" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="284" y="104" width="160" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="292" y="112" width="32" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.35)" stroke-width="0.8"/>
+        <text x="308" y="121" fill="#2d3142" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">SPEC</text>
+        <text x="436" y="160" fill="rgba(45,49,66,0.06)" font-size="28" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="end">02</text>
+        <text x="364" y="138" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Contract Manifests</text>
+        <text x="364" y="154" fill="#4f5d75" font-size="8.5" font-family="'Geist Mono', monospace" text-anchor="middle">model.yaml · bindings</text>
+
+        <!-- Node 3: Model Source & Tests (Windows Control Plane) -->
+        <rect x="504" y="104" width="160" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="504" y="104" width="160" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="512" y="112" width="28" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.35)" stroke-width="0.8"/>
+        <text x="526" y="121" fill="#2d3142" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">DEV</text>
+        <text x="656" y="160" fill="rgba(45,49,66,0.06)" font-size="28" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="end">03</text>
+        <text x="584" y="138" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Algorithm Core</text>
+        <text x="584" y="154" fill="#4f5d75" font-size="8.5" font-family="'Geist Mono', monospace" text-anchor="middle">src/model.py · tests/</text>
+
+        <!-- Node 4: MLflow Service Bundle (Linux WSL Target Runtime) -->
+        <rect x="174" y="328" width="160" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="174" y="328" width="160" height="64" rx="6" fill="rgba(45,49,66,0.04)" stroke="#4f5d75" stroke-width="1"/>
+        <rect x="182" y="336" width="30" height="12" rx="2" fill="transparent" stroke="rgba(79,93,117,0.40)" stroke-width="0.8"/>
+        <text x="197" y="345" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">SERV</text>
+        <text x="326" y="384" fill="rgba(45,49,66,0.06)" font-size="28" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="end">04</text>
+        <text x="254" y="362" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">MLflow Bundle</text>
+        <text x="254" y="378" fill="#4f5d75" font-size="8.5" font-family="'Geist Mono', monospace" text-anchor="middle">release-bundle/service</text>
+
+        <!-- Node 5: Offline Preflight (Linux WSL Target Runtime) -->
+        <rect x="394" y="328" width="160" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="394" y="328" width="160" height="64" rx="6" fill="rgba(45,49,66,0.04)" stroke="#4f5d75" stroke-width="1"/>
+        <rect x="402" y="336" width="28" height="12" rx="2" fill="transparent" stroke="rgba(79,93,117,0.40)" stroke-width="0.8"/>
+        <text x="416" y="345" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">EVAL</text>
+        <text x="546" y="384" fill="rgba(45,49,66,0.06)" font-size="28" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="end">05</text>
+        <text x="474" y="362" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Offline Preflight</text>
+        <text x="474" y="378" fill="#4f5d75" font-size="8.5" font-family="'Geist Mono', monospace" text-anchor="middle">loaded.predict() Linux</text>
+
+        <!-- Node 6: 4 Hard Quality Gates (Assurance & Production) -->
+        <rect x="820" y="104" width="180" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="820" y="104" width="180" height="64" rx="6" fill="rgba(45,49,66,0.03)" stroke="#2d3142" stroke-width="1.2"/>
+        <rect x="828" y="112" width="30" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.45)" stroke-width="0.8"/>
+        <text x="843" y="121" fill="#2d3142" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">GATE</text>
+        <text x="992" y="160" fill="rgba(45,49,66,0.06)" font-size="28" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="end">06</text>
+        <text x="910" y="138" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">4 Hard Quality Gates</text>
+        <text x="910" y="154" fill="#4f5d75" font-size="8.5" font-family="'Geist Mono', monospace" text-anchor="middle">doctor · catalog · release</text>
+
+        <!-- Node 7: Standards & Spec Review (Assurance & Production) -->
+        <rect x="820" y="216" width="180" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="820" y="216" width="180" height="64" rx="6" fill="rgba(79,93,117,0.06)" stroke="#5a6580" stroke-width="1"/>
+        <rect x="828" y="224" width="28" height="12" rx="2" fill="transparent" stroke="rgba(90,101,128,0.40)" stroke-width="0.8"/>
+        <text x="842" y="233" fill="#5a6580" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">REV</text>
+        <text x="992" y="272" fill="rgba(45,49,66,0.06)" font-size="28" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="end">07</text>
+        <text x="910" y="250" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Dual-Axis Review</text>
+        <text x="910" y="266" fill="#4f5d75" font-size="8.5" font-family="'Geist Mono', monospace" text-anchor="middle">Standards &amp; Spec PASS</text>
+
+        <!-- Node 8: Company MLflow Registry (Assurance & Production, Focal Coral) -->
+        <rect x="820" y="328" width="180" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="820" y="328" width="180" height="64" rx="6" fill="rgba(191,69,32,0.08)" stroke="#bf4520" stroke-width="1.2"/>
+        <rect x="828" y="336" width="30" height="12" rx="2" fill="transparent" stroke="rgba(191,69,32,0.50)" stroke-width="0.8"/>
+        <text x="843" y="345" fill="#bf4520" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">PROD</text>
+        <text x="992" y="384" fill="rgba(191,69,32,0.10)" font-size="28" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="end">08</text>
+        <text x="910" y="362" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">MLflow Registry</text>
+        <text x="910" y="378" fill="#4f5d75" font-size="8.5" font-family="'Geist Mono', monospace" text-anchor="middle">MLModel-* · Receipt</text>
+
+        <!-- ── LEGEND STRIP (Horizontal bottom) ───────────────────── -->
+        <line x1="40" y1="468" x2="1080" y2="468" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+        <text x="40" y="488" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.18em">LEGEND</text>
+
+        <rect x="40" y="500" width="14" height="10" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="62" y="508" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">Control Plane (Windows)</text>
+
+        <rect x="230" y="500" width="14" height="10" rx="2" fill="rgba(45,49,66,0.04)" stroke="#4f5d75" stroke-width="1"/>
+        <text x="252" y="508" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">Execution Runtime (Linux WSL)</text>
+
+        <rect x="450" y="500" width="14" height="10" rx="2" fill="rgba(45,49,66,0.03)" stroke="#2d3142" stroke-width="1.2"/>
+        <text x="472" y="508" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">Deterministic Gatekeeper</text>
+
+        <rect x="660" y="500" width="14" height="10" rx="2" fill="rgba(191,69,32,0.08)" stroke="#bf4520" stroke-width="1.2"/>
+        <text x="682" y="508" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">Focal / Production Registry</text>
+
+        <line x1="860" y1="506" x2="888" y2="506" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <text x="896" y="508" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">Standard Flow</text>
+
+        <line x1="990" y1="506" x2="1018" y2="506" stroke="#bf4520" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+        <text x="1026" y="508" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">Authorized Release</text>
+      </svg>
+    </div>
+
+    <!-- ── SUMMARY CARDS (1.15fr 1fr 0.95fr) ─────────────────────── -->
+    <div class="cards-grid">
+      <div class="card">
+        <p class="card-eyebrow">RUNTIME ISOLATION</p>
+        <h3>双运行时完全解耦</h3>
+        <p>彻底解决 Windows 本地开发环境与云端 Linux 生产环境差异引发的上线即报错痛点：</p>
+        <ul>
+          <li><strong>控制面 (Windows)</strong>：通过 `model-lab` 进行脚手架生成、契约定义与数据探索。</li>
+          <li><strong>执行面 (Linux WSL)</strong>：独立隔离构建 `release-bundle/service` 部署实包，并在 Linux Python 3.11 环境运行 `loaded.predict()` 离线冒烟。</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <p class="card-eyebrow">QUALITY ASSURANCE</p>
+        <h3>四道硬门禁确定性拦截</h3>
+        <p>在任何模型合并或发布前，必须 100% 自动化通过四道不可绕过的质量闸门：</p>
+        <ul>
+          <li><strong>Gate 1 (doctor)</strong>：Python 3.11 环境基线与依赖诊断；</li>
+          <li><strong>Gate 2 (catalog)</strong>：中央资产目录与 8 项在役模型无漂移；</li>
+          <li><strong>Gate 3 (context)</strong>：全量 27 个模型快照一致性核验；</li>
+          <li><strong>Gate 4 (release-gate)</strong>：8 项发布规则与敏感文件全面拦截。</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <p class="card-eyebrow">GOVERNANCE POLICY</p>
+        <h3>逐次显式授权红线</h3>
+        <p>杜绝越权上传与隐式破坏，保障水务工业模型上线资产安全与可追溯性：</p>
+        <ul>
+          <li><strong>发布权限收口</strong>：禁止自动执行 `publish --apply`，必须获得用户单次显式授权；</li>
+          <li><strong>留档与回执</strong>：发布成功后严格写入 `publish-receipt.json`，完成全链路闭环。</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>WATER MODEL LABORATORY &middot; GOVERNANCE SUITE</span>
+      <span>DIAGRAM DESIGN &middot; EDITORIAL EDITION</span>
+    </div>
+  </div>
+</body>
+</html>

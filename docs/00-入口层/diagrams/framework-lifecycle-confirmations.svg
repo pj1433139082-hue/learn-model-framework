@@ -1,0 +1,339 @@
+<svg viewBox="0 0 1120 730" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="lifecycle-pipeline-title lifecycle-pipeline-desc">
+  <title id="lifecycle-pipeline-title">水务模型全生命周期推进与各步骤确认门禁全景流</title>
+  <desc id="lifecycle-pipeline-desc">展示水务模型从草稿到生产发布的六阶段推进流程，明确各步骤必须确认的决策、门禁与产出物，重点标明达成可发布(releasable)状态的硬性核验前置条件，以及人机交互固定问卷与开放探讨矩阵。</desc>
+
+  <defs>
+    <pattern id="grid-dots" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="0.8" fill="rgba(45,49,66,0.08)"/>
+    </pattern>
+    <marker id="pipe-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/>
+    </marker>
+    <marker id="pipe-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#bf4520"/>
+    </marker>
+    <marker id="pipe-arrow-blue" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="#f5f5f5"/>
+  <rect width="100%" height="100%" fill="url(#grid-dots)" opacity="0.6"/>
+
+  <!-- Top Title Strip -->
+  <text x="48" y="32" fill="#5a6580" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.16em">LIFECYCLE PIPELINE · STEP CONFIRMATION GATES</text>
+  <text x="48" y="52" fill="#2d3142" font-size="16" font-family="'Playfair Display', Georgia, serif" font-weight="600">全生命周期六阶段递进流与各步骤确认门禁</text>
+  <text x="1072" y="52" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">MILESTONE: RELEASABLE</text>
+
+  <!-- Connectors between Cards -->
+  <!-- Card 0 -> 1 -->
+  <line x1="204" y1="130" x2="222" y2="130" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#pipe-arrow)"/>
+  <!-- Card 1 -> 2 -->
+  <line x1="378" y1="130" x2="396" y2="130" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#pipe-arrow)"/>
+  <!-- Card 2 -> 3 (Entering Packaging) -->
+  <line x1="552" y1="130" x2="570" y2="130" stroke="#2e5aa8" stroke-width="1.4" marker-end="url(#pipe-arrow-blue)"/>
+  <!-- Card 3 -> 4 (Releasable Milestone!) -->
+  <line x1="726" y1="130" x2="744" y2="130" stroke="#2e5aa8" stroke-width="1.4" marker-end="url(#pipe-arrow-blue)"/>
+  <!-- Card 4 -> 5 (Audit to Release) -->
+  <line x1="900" y1="130" x2="918" y2="130" stroke="#bf4520" stroke-width="1.4" marker-end="url(#pipe-arrow-accent)"/>
+
+  <!-- ── CARD 0: 环境自检 ────────────────────────────────────────── -->
+  <rect x="48" y="74" width="156" height="324" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+  <!-- Header Badge -->
+  <rect x="56" y="82" width="30" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.35)" stroke-width="0.8"/>
+  <text x="71" y="91" fill="#2d3142" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">INIT</text>
+  <text x="196" y="92" fill="#5a6580" font-size="7.5" font-family="'Geist Mono', monospace" text-anchor="end">READY</text>
+  <text x="56" y="112" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="600">0. 环境自检</text>
+  <text x="56" y="125" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">model-lab-setup</text>
+  
+  <line x1="56" y1="134" x2="196" y2="134" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+  <text x="56" y="148" fill="#5a6580" font-size="7" font-family="'Geist Mono', monospace" letter-spacing="0.1em">确认内容 (CONFIRMED)</text>
+  
+  <circle cx="62" cy="164" r="2" fill="#4f5d75"/>
+  <text x="69" y="167" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif">Python &gt;=3.11,&lt;3.12</text>
+  <text x="69" y="177" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">解释器基线诊断通过</text>
+  
+  <circle cx="62" cy="195" r="2" fill="#4f5d75"/>
+  <text x="69" y="198" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif">WSL Linux 目标宿主</text>
+  <text x="69" y="208" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">编译环境 3项测试全过</text>
+  
+  <circle cx="62" cy="226" r="2" fill="#4f5d75"/>
+  <text x="69" y="229" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif">Skillshare 技能同步</text>
+  <text x="69" y="239" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">智能体技能双向一致</text>
+
+  <circle cx="62" cy="257" r="2" fill="#4f5d75"/>
+  <text x="69" y="260" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif">能力包 SHA256 钉住</text>
+  <text x="69" y="270" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">06f08382 指纹匹配</text>
+
+  <rect x="56" y="348" width="140" height="38" rx="4" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+  <text x="64" y="362" fill="#5a6580" font-size="7" font-family="'Geist Mono', monospace">OUTPUT EVIDENCE</text>
+  <text x="64" y="376" fill="#2d3142" font-size="8" font-family="'Geist Mono', monospace" font-weight="600">doctor: READY</text>
+
+  <!-- ── CARD 1: 需求设计 ────────────────────────────────────────── -->
+  <rect x="222" y="74" width="156" height="324" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+  <rect x="230" y="82" width="30" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.35)" stroke-width="0.8"/>
+  <text x="245" y="91" fill="#2d3142" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">SPEC</text>
+  <text x="370" y="92" fill="#5a6580" font-size="7.5" font-family="'Geist Mono', monospace" text-anchor="end">specified</text>
+  <text x="230" y="112" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="600">1. 需求设计</text>
+  <text x="230" y="125" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">requirements-grill</text>
+
+  <line x1="230" y1="134" x2="370" y2="134" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+  <text x="230" y="148" fill="#5a6580" font-size="7" font-family="'Geist Mono', monospace" letter-spacing="0.1em">确认内容 (CONFIRMED)</text>
+
+  <circle cx="236" cy="164" r="2" fill="#4f5d75"/>
+  <text x="243" y="167" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif">输入/输出契约定义</text>
+  <text x="243" y="177" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">字段名、类型与物理单位</text>
+
+  <circle cx="236" cy="195" r="2" fill="#4f5d75"/>
+  <text x="243" y="198" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif">算法逻辑与计算口径</text>
+  <text x="243" y="208" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">机理常数、公式与特征变换</text>
+
+  <circle cx="236" cy="226" r="2" fill="#4f5d75"/>
+  <text x="243" y="229" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif">异常边界与截断策略</text>
+  <text x="243" y="239" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">空值报错、物理上下限截断</text>
+
+  <circle cx="236" cy="257" r="2" fill="#4f5d75"/>
+  <text x="243" y="260" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif">decisions 前6项确认</text>
+  <text x="243" y="270" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">用户显式审批无悬空</text>
+
+  <rect x="230" y="348" width="140" height="38" rx="4" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+  <text x="238" y="362" fill="#5a6580" font-size="7" font-family="'Geist Mono', monospace">OUTPUT EVIDENCE</text>
+  <text x="238" y="376" fill="#2d3142" font-size="8" font-family="'Geist Mono', monospace" font-weight="600">model.yaml · decisions</text>
+
+  <!-- ── CARD 2: 编码验证 ────────────────────────────────────────── -->
+  <rect x="396" y="74" width="156" height="324" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+  <rect x="404" y="82" width="28" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.35)" stroke-width="0.8"/>
+  <text x="418" y="91" fill="#2d3142" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">DEV</text>
+  <text x="544" y="92" fill="#5a6580" font-size="7.5" font-family="'Geist Mono', monospace" text-anchor="end">validated</text>
+  <text x="404" y="112" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="600">2. 研发验证</text>
+  <text x="404" y="125" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">model-build-validate</text>
+
+  <line x1="404" y1="134" x2="544" y2="134" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+  <text x="404" y="148" fill="#5a6580" font-size="7" font-family="'Geist Mono', monospace" letter-spacing="0.1em">确认内容 (CONFIRMED)</text>
+
+  <circle cx="410" cy="164" r="2" fill="#4f5d75"/>
+  <text x="417" y="167" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif">数据质量与清洗结论</text>
+  <text x="417" y="177" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">输入特征清洗与聚合有效</text>
+
+  <circle cx="410" cy="195" r="2" fill="#4f5d75"/>
+  <text x="417" y="198" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif">TDD 单元测试全绿</text>
+  <text x="417" y="208" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">unittest 浮点误差&lt;1e-10</text>
+
+  <circle cx="410" cy="226" r="2" fill="#4f5d75"/>
+  <text x="417" y="229" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif">时序推参/预测走查</text>
+  <text x="417" y="239" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">评估指标与动态趋势符合机理</text>
+
+  <circle cx="410" cy="257" r="2" fill="#4f5d75"/>
+  <text x="417" y="260" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif">decisions 7~8项确认</text>
+  <text x="417" y="270" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">数据与验证结论 confirmed</text>
+
+  <rect x="404" y="348" width="140" height="38" rx="4" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+  <text x="412" y="362" fill="#5a6580" font-size="7" font-family="'Geist Mono', monospace">OUTPUT EVIDENCE</text>
+  <text x="412" y="376" fill="#2d3142" font-size="8" font-family="'Geist Mono', monospace" font-weight="600">src/model.py · plots/</text>
+
+  <!-- ── CARD 3: 实包构建 (★ RELEASABLE MILESTONE) ────────────────── -->
+  <rect x="570" y="74" width="156" height="324" rx="6" fill="#ffffff" stroke="#2e5aa8" stroke-width="1.6"/>
+  <rect x="578" y="82" width="38" height="12" rx="2" fill="rgba(46,90,168,0.08)" stroke="#2e5aa8" stroke-width="0.8"/>
+  <text x="597" y="91" fill="#2e5aa8" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">BUNDLE</text>
+  <text x="718" y="92" fill="#2e5aa8" font-size="7.5" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">releasable</text>
+  <text x="578" y="112" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="600">3. 实包构建</text>
+  <text x="578" y="125" fill="#2e5aa8" font-size="8" font-family="'Geist Mono', monospace">model-runtime-release</text>
+
+  <line x1="578" y1="134" x2="718" y2="134" stroke="rgba(46,90,168,0.25)" stroke-width="0.8"/>
+  <text x="578" y="148" fill="#2e5aa8" font-size="7" font-family="'Geist Mono', monospace" letter-spacing="0.1em">确认内容 (CONFIRMED)</text>
+
+  <circle cx="584" cy="164" r="2" fill="#2e5aa8"/>
+  <text x="591" y="167" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif">部署计划与实验绑定</text>
+  <text x="591" y="177" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">锁定在役实验编号 (MLModel)</text>
+
+  <circle cx="584" cy="195" r="2" fill="#2e5aa8"/>
+  <text x="591" y="198" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif">回滚降级策略确认</text>
+  <text x="591" y="208" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">异常/超时回滚至安全保底值</text>
+
+  <circle cx="584" cy="226" r="2" fill="#2e5aa8"/>
+  <text x="591" y="229" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif">WSL Linux 实包构建</text>
+  <text x="591" y="239" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">predict() 推理验证全过</text>
+
+  <circle cx="584" cy="257" r="2" fill="#2e5aa8"/>
+  <text x="591" y="260" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif">decisions 10项全达成</text>
+  <text x="591" y="270" fill="#2e5aa8" font-size="7.5" font-family="'Geist', sans-serif" font-weight="600">★ 门禁放行到达 releasable</text>
+
+  <rect x="578" y="348" width="140" height="38" rx="4" fill="rgba(46,90,168,0.06)" stroke="#2e5aa8" stroke-width="0.8"/>
+  <text x="586" y="362" fill="#2e5aa8" font-size="7" font-family="'Geist Mono', monospace">MILESTONE ACHIEVED</text>
+  <text x="586" y="376" fill="#2d3142" font-size="8" font-family="'Geist Mono', monospace" font-weight="600">releasable 就绪</text>
+
+  <!-- ── CARD 4: 门禁审计 ────────────────────────────────────────── -->
+  <rect x="744" y="74" width="156" height="324" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+  <rect x="752" y="82" width="30" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.35)" stroke-width="0.8"/>
+  <text x="767" y="91" fill="#2d3142" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">AUDIT</text>
+  <text x="892" y="92" fill="#5a6580" font-size="7.5" font-family="'Geist Mono', monospace" text-anchor="end">releasable</text>
+  <text x="752" y="112" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="600">4. 门禁审计</text>
+  <text x="752" y="125" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">release-gate · review</text>
+
+  <line x1="752" y1="134" x2="892" y2="134" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+  <text x="752" y="148" fill="#5a6580" font-size="7" font-family="'Geist Mono', monospace" letter-spacing="0.1em">确认内容 (CONFIRMED)</text>
+
+  <circle cx="758" cy="164" r="2" fill="#4f5d75"/>
+  <text x="765" y="167" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif">自动化四道硬门禁全绿</text>
+  <text x="765" y="177" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">doctor/catalog/context/gate</text>
+
+  <circle cx="758" cy="195" r="2" fill="#4f5d75"/>
+  <text x="765" y="198" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif">仓库纯洁守卫测试</text>
+  <text x="765" y="208" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">test_repository 16/16 OK</text>
+
+  <circle cx="758" cy="226" r="2" fill="#4f5d75"/>
+  <text x="765" y="229" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif">双轴独立审查双 PASS</text>
+  <text x="765" y="239" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">Standards 规范 + Spec 规格</text>
+
+  <circle cx="758" cy="257" r="2" fill="#4f5d75"/>
+  <text x="765" y="260" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif">无破坏性全量单测回归</text>
+  <text x="765" y="270" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">403 门禁用例全部通过</text>
+
+  <rect x="752" y="348" width="140" height="38" rx="4" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+  <text x="760" y="362" fill="#5a6580" font-size="7" font-family="'Geist Mono', monospace">OUTPUT EVIDENCE</text>
+  <text x="760" y="376" fill="#2d3142" font-size="8" font-family="'Geist Mono', monospace" font-weight="600">release-gate: PASSED</text>
+
+  <!-- ── CARD 5: 授权发布 ────────────────────────────────────────── -->
+  <rect x="918" y="74" width="156" height="324" rx="6" fill="#ffffff" stroke="#bf4520" stroke-width="1.4"/>
+  <rect x="926" y="82" width="30" height="12" rx="2" fill="rgba(191,69,32,0.08)" stroke="#bf4520" stroke-width="0.8"/>
+  <text x="941" y="91" fill="#bf4520" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">PROD</text>
+  <text x="1064" y="92" fill="#bf4520" font-size="7.5" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">released</text>
+  <text x="926" y="112" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="600">5. 授权发布</text>
+  <text x="926" y="125" fill="#bf4520" font-size="8" font-family="'Geist Mono', monospace">company_publish</text>
+
+  <line x1="926" y1="134" x2="1064" y2="134" stroke="rgba(191,69,32,0.25)" stroke-width="0.8"/>
+  <text x="926" y="148" fill="#bf4520" font-size="7" font-family="'Geist Mono', monospace" letter-spacing="0.1em">确认内容 (CONFIRMED)</text>
+
+  <circle cx="932" cy="164" r="2" fill="#bf4520"/>
+  <text x="939" y="167" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif">用户单次显式授权</text>
+  <text x="939" y="177" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">严禁 AI 智能体越权上传</text>
+
+  <circle cx="932" cy="195" r="2" fill="#bf4520"/>
+  <text x="939" y="198" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif">MLflow 服务端成功回执</text>
+  <text x="939" y="208" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">实验、版本、路径校验</text>
+
+  <circle cx="932" cy="226" r="2" fill="#bf4520"/>
+  <text x="939" y="229" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif">生成 releases 归档快照</text>
+  <text x="939" y="239" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">releases/0.1.0.yaml</text>
+
+  <circle cx="932" cy="257" r="2" fill="#bf4520"/>
+  <text x="939" y="260" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif">在役资产目录自动登记</text>
+  <text x="939" y="270" fill="#bf4520" font-size="7.5" font-family="'Geist', sans-serif" font-weight="600">01-在役模型资产目录.md</text>
+
+  <rect x="926" y="348" width="140" height="38" rx="4" fill="rgba(191,69,32,0.06)" stroke="#bf4520" stroke-width="0.8"/>
+  <text x="934" y="362" fill="#bf4520" font-size="7" font-family="'Geist Mono', monospace">FINAL REGISTRATION</text>
+  <text x="934" y="376" fill="#2d3142" font-size="8" font-family="'Geist Mono', monospace" font-weight="600">MLModel-XXXX_VYYY</text>
+
+  <!-- ── MIDDLE DIVIDER & QUESTION MATRIX HEADER ───────────────────── -->
+  <line x1="48" y1="416" x2="1072" y2="416" stroke="rgba(45,49,66,0.14)" stroke-width="0.8"/>
+  <text x="48" y="434" fill="#5a6580" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.16em">HUMAN-IN-THE-LOOP QUESTION MATRIX · STAGE HANDSHAKE</text>
+  <text x="48" y="452" fill="#2d3142" font-size="14" font-family="'Playfair Display', Georgia, serif" font-weight="600">人机交互前置确认与固定问卷导航矩阵</text>
+  <text x="1072" y="452" fill="#4f5d75" font-size="8.5" font-family="'Geist Mono', monospace" text-anchor="end">FIXED QUESTIONS (MUST) VS OPEN DISCUSSIONS (EXPLORE)</text>
+
+  <!-- ── MATRIX CARD 1: STAGE 0 基建与任务前置握手 (必答) ─────────── -->
+  <rect x="48" y="468" width="328" height="206" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+  <rect x="58" y="478" width="46" height="13" rx="2" fill="rgba(45,49,66,0.06)" stroke="#2d3142" stroke-width="0.8"/>
+  <text x="81" y="488" fill="#2d3142" font-size="7.5" font-family="'Geist Mono', monospace" text-anchor="middle" font-weight="600">STAGE 0</text>
+  <text x="364" y="488" fill="#5a6580" font-size="7.5" font-family="'Geist Mono', monospace" text-anchor="end">MUST CONFIRM</text>
+  <text x="58" y="508" fill="#2d3142" font-size="11.5" font-family="'Geist', sans-serif" font-weight="600">基建自检与任务前置握手</text>
+  <text x="58" y="520" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">model-lab-setup &amp; handshake</text>
+
+  <line x1="58" y1="527" x2="366" y2="527" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+
+  <circle cx="66" cy="542" r="2" fill="#2d3142"/>
+  <text x="74" y="545" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif" font-weight="600">解释器与环境基线</text>
+  <text x="74" y="555" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">Python &gt;=3.11,&lt;3.12 唯一受控 · WSL 3.11 容器就绪</text>
+
+  <circle cx="66" cy="572" r="2" fill="#2d3142"/>
+  <text x="74" y="575" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif" font-weight="600">任务与 Issue 载体形态</text>
+  <text x="74" y="585" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">GitHub 远端 Issue (#ID) vs 本地 Markdown 离线规格</text>
+
+  <circle cx="66" cy="602" r="2" fill="#2d3142"/>
+  <text x="74" y="605" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif" font-weight="600">生命周期演进模式</text>
+  <text x="74" y="615" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">新建全新模型 (0.1.0) / 缺陷补丁 (x.y.z+1) / 次版升级</text>
+
+  <circle cx="66" cy="632" r="2" fill="#2d3142"/>
+  <text x="74" y="635" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif" font-weight="600">专属技能与安全红线</text>
+  <text x="74" y="645" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">按需识别授权 (diagram/water) · 私有数据禁入 Git</text>
+
+  <rect x="58" y="654" width="308" height="14" rx="2" fill="rgba(45,49,66,0.04)"/>
+  <text x="212" y="664" fill="#2d3142" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">RULE: 开工首回合必须完成基建握手，禁止无环境盲跑</text>
+
+  <!-- ── MATRIX CARD 2: STAGE 1-2 契约数据与算法路线 (必答) ────────── -->
+  <rect x="396" y="468" width="328" height="206" rx="6" fill="#ffffff" stroke="#2e5aa8" stroke-width="1.2"/>
+  <rect x="406" y="478" width="56" height="13" rx="2" fill="rgba(46,90,168,0.08)" stroke="#2e5aa8" stroke-width="0.8"/>
+  <text x="434" y="488" fill="#2e5aa8" font-size="7.5" font-family="'Geist Mono', monospace" text-anchor="middle" font-weight="600">STAGE 1-2</text>
+  <text x="712" y="488" fill="#2e5aa8" font-size="7.5" font-family="'Geist Mono', monospace" text-anchor="end">MUST CONFIRM</text>
+  <text x="406" y="508" fill="#2d3142" font-size="11.5" font-family="'Geist', sans-serif" font-weight="600">契约数据与算法路线固定必答</text>
+  <text x="406" y="520" fill="#2e5aa8" font-size="8" font-family="'Geist Mono', monospace">contract, data &amp; algorithm schema</text>
+
+  <line x1="406" y1="527" x2="714" y2="527" stroke="rgba(46,90,168,0.2)" stroke-width="0.8"/>
+
+  <circle cx="414" cy="542" r="2" fill="#2e5aa8"/>
+  <text x="422" y="545" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif" font-weight="600">现场数据输入形态</text>
+  <text x="422" y="555" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">离线 Excel 表格 (时间戳/多列) vs 真实测点数组 (Point-codes)</text>
+
+  <circle cx="414" cy="572" r="2" fill="#2e5aa8"/>
+  <text x="422" y="575" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif" font-weight="600">计算频率与调度周期</text>
+  <text x="422" y="585" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">10 分钟中控标准 / 5 分钟敏捷调节 / 1 小时报表</text>
+
+  <circle cx="414" cy="602" r="2" fill="#2e5aa8"/>
+  <text x="422" y="605" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif" font-weight="600">多探头冗余聚合规则</text>
+  <text x="422" y="615" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">双探头均值 (mean) / 极值 (max/min) / 单探头 / 主备回退</text>
+
+  <circle cx="414" cy="632" r="2" fill="#2e5aa8"/>
+  <text x="422" y="635" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif" font-weight="600">算法路线与依赖纯洁度</text>
+  <text x="422" y="645" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">纯机理公式 vs 统计/机器学习 (.pkl) · 严禁未授权私有包</text>
+
+  <rect x="406" y="654" width="308" height="14" rx="2" fill="rgba(46,90,168,0.05)"/>
+  <text x="560" y="664" fill="#2e5aa8" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">RULE: 点位、时间步长与聚合口径必须固化写入 model.yaml</text>
+
+  <!-- ── MATRIX CARD 3: STAGE 1-5 现场工艺与极端工况 (开放探讨) ────── -->
+  <rect x="744" y="468" width="328" height="206" rx="6" fill="#ffffff" stroke="#bf4520" stroke-width="1.2"/>
+  <rect x="754" y="478" width="52" height="13" rx="2" fill="rgba(191,69,32,0.08)" stroke="#bf4520" stroke-width="0.8"/>
+  <text x="780" y="488" fill="#bf4520" font-size="7.5" font-family="'Geist Mono', monospace" text-anchor="middle" font-weight="600">EXPLORE</text>
+  <text x="1060" y="488" fill="#bf4520" font-size="7.5" font-family="'Geist Mono', monospace" text-anchor="end">DEEP DIALOGUE</text>
+  <text x="754" y="508" fill="#2d3142" font-size="11.5" font-family="'Geist', sans-serif" font-weight="600">现场工艺与极端工况开放探讨</text>
+  <text x="754" y="520" fill="#bf4520" font-size="8" font-family="'Geist Mono', monospace">domain-modeling &amp; field strategy</text>
+
+  <line x1="754" y1="527" x2="1062" y2="527" stroke="rgba(191,69,32,0.2)" stroke-width="0.8"/>
+
+  <circle cx="762" cy="542" r="2" fill="#bf4520"/>
+  <text x="770" y="545" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif" font-weight="600">探头故障与断流保底策略</text>
+  <text x="770" y="555" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">结垢显示 0 / 负值时：前向保持 vs 历史均值 vs 物理截断兜底</text>
+
+  <circle cx="762" cy="572" r="2" fill="#bf4520"/>
+  <text x="770" y="575" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif" font-weight="600">冲击工况与参数分支切换</text>
+  <text x="770" y="585" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">暴雨雨季大水量 / 低温冬季工况下的算法常数动态调整</text>
+
+  <circle cx="762" cy="602" r="2" fill="#bf4520"/>
+  <text x="770" y="605" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif" font-weight="600">离线验证样本规格与精度要求</text>
+  <text x="770" y="615" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">单条冒烟 vs 24h (48~144点) 连续回放 · 绝对误差 vs 统计 MAPE</text>
+
+  <circle cx="762" cy="632" r="2" fill="#bf4520"/>
+  <text x="770" y="635" fill="#2d3142" font-size="8" font-family="'Geist', sans-serif" font-weight="600">线上安全告警与故障回滚预案</text>
+  <text x="770" y="645" fill="#5a6580" font-size="7.5" font-family="'Geist', sans-serif">重点指标监控 (DO/氨氮) · 异常时切回传统 PLC 人工设定值</text>
+
+  <rect x="754" y="654" width="308" height="14" rx="2" fill="rgba(191,69,32,0.05)"/>
+  <text x="908" y="664" fill="#bf4520" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">RULE: 探讨结论必须留档于 model-spec.md 与 decisions.yaml</text>
+
+  <!-- ── BOTTOM LEGEND STRIP ────────────────────────────────────── -->
+  <line x1="48" y1="694" x2="1072" y2="694" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+  <text x="48" y="710" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace" letter-spacing="0.14em">GATEWAY &amp; QUESTION LEGEND</text>
+
+  <rect x="220" y="702" width="10" height="8" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+  <text x="236" y="709" fill="#4f5d75" font-size="8" font-family="'Geist', sans-serif">Fixed Question (必答项)</text>
+
+  <rect x="370" y="702" width="10" height="8" rx="2" fill="#ffffff" stroke="#bf4520" stroke-width="1.2"/>
+  <text x="386" y="709" fill="#4f5d75" font-size="8" font-family="'Geist', sans-serif">Open Discussion (开放探讨)</text>
+
+  <rect x="540" y="702" width="10" height="8" rx="2" fill="#ffffff" stroke="#2e5aa8" stroke-width="1.4"/>
+  <text x="556" y="709" fill="#4f5d75" font-size="8" font-family="'Geist', sans-serif">Releasable Milestone (待发布)</text>
+
+  <line x1="720" y1="706" x2="744" y2="706" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#pipe-arrow)"/>
+  <text x="752" y="709" fill="#4f5d75" font-size="8" font-family="'Geist', sans-serif">Stage Progression</text>
+
+  <line x1="880" y1="706" x2="904" y2="706" stroke="#bf4520" stroke-width="1.4" marker-end="url(#pipe-arrow-accent)"/>
+  <text x="912" y="709" fill="#4f5d75" font-size="8" font-family="'Geist', sans-serif">Explicit Human Approval</text>
+</svg>

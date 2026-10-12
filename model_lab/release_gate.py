@@ -18,7 +18,8 @@ from model_lab.path_safety import is_link_or_junction
 
 _ROOT_FILES = frozenset({
     ".gitattributes", ".gitignore", ".python-version", "AGENTS.md", "README.md", "CONTEXT.md",
-    "CHANGELOG.md", "pyproject.toml",
+    "CHANGELOG.md", "pyproject.toml", "LICENSE", "CONTRIBUTING.md", "CODE_OF_CONDUCT.md",
+    "SECURITY.md",
 })
 _SOURCE_ROOTS = frozenset({
     ".codex", ".github", ".skillshare", ".vscode", "docs", "model_lab",

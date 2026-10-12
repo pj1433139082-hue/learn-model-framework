@@ -1,0 +1,90 @@
+name: "🐛 Bug Report / 问题反馈"
+description: "报告代码错误、运行时崩溃或与契约不符的异常行为"
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢你帮助改进 learn-model-framework！
+        **⚠️ 零泄漏安全红线**：请切勿在 Issue 中粘贴任何真实的工厂生产测点、厂站名称、内部 IP 地址或敏感凭据。所有复现示例请使用合成假数据或 `PSXXXX` / `TEST-001` 等虚构点位。
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: "操作系统 (Operating System)"
+      description: "请选择你运行框架的操作系统"
+      options:
+        - "Windows 10 / 11 (PowerShell / pwsh)"
+        - "Linux (Ubuntu / Debian / CentOS / RHEL)"
+        - "macOS"
+        - "WSL2"
+        - "其他 (请在复现步骤中注明)"
+    validations:
+      required: true
+
+  - type: input
+    id: python-version
+    attributes:
+      label: "Python 版本 (Python Version)"
+      description: "框架要求使用 Python 3.11.x（可通过 `python --version` 查看）"
+      placeholder: "e.g. 3.11.15"
+    validations:
+      required: true
+
+  - type: input
+    id: cli-command
+    attributes:
+      label: "执行的命令或入口 (Executed Command)"
+      description: "发生异常时执行的完整 CLI 命令或脚本"
+      placeholder: "e.g. & .\\scripts\\model-lab.ps1 doctor 或 bash scripts/model-lab.sh new example-flow --apply"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "问题描述 (Problem Description)"
+      description: "清晰简洁地说明发生了什么错误"
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: "最小可复现步骤 (Minimal Reproducible Steps)"
+      description: "请提供能稳定复现该问题的最简步骤（包含虚构的配置片段或草稿目录信息）"
+      placeholder: |
+        1. 运行 `...`
+        2. 创建虚构草稿配置 `model.yaml`
+        3. 执行 `...`
+        4. 观察到异常
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: "期望行为 (Expected Behavior)"
+      description: "按照框架契约或文档，你期望的正常行为是什么"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: "完整报错日志 / 堆栈信息 (Error Logs / Stack Trace)"
+      description: "请粘贴终端输出的完整错误日志及 Traceback（代码块格式）"
+      render: shell
+
+  - type: checkboxes
+    id: safety-confirm
+    attributes:
+      label: "合规与环境自查清单 (Pre-flight Checklist)"
+      options:
+        - label: "我已核实并确认上述日志与配置中**绝无**任何真实工厂名称、测点编码、内部网络 IP 或凭据密钥。"
+          required: true
+        - label: "我已在 Python 3.11 环境下尝试过，确认非跨大版本不兼容导致。"
+          required: true
+        - label: "我已在现有 Issue / PR 列表中搜索过，确认此问题未被重复报告。"
+          required: true

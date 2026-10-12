@@ -1,0 +1,15 @@
+version: 2
+updates:
+  # GitHub Actions 工作流依赖检查
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+
+  # Python 依赖生态检查
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10

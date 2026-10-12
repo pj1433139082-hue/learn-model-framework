@@ -164,6 +164,25 @@ class PrivacyGateTests(unittest.TestCase):
             report = run_release_gate(root)
             self.assertTrue(report.valid, report.as_text())
 
+    def test_community_governance_root_files_are_allowed(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="framework-gate-") as directory:
+            root = Path(directory)
+            _init_repository(root)
+            readme = root / "README.md"
+            readme.write_text("A synthetic framework\n", encoding="utf-8")
+            _git(root, "add", "README.md")
+            _commit(root, "initial")
+
+            for filename in ("LICENSE", "CONTRIBUTING.md", "CODE_OF_CONDUCT.md", "SECURITY.md"):
+                file_path = root / filename
+                file_path.write_text(f"# {filename}\nSynthetic governance content.\n", encoding="utf-8")
+                _git(root, "add", filename)
+
+            report = run_release_gate(root)
+            self.assertTrue(report.valid, report.as_text())
+            self.assertEqual(_check_status(report, "shared_index_allowlist"), "passed")
+            self.assertEqual(_check_status(report, "shared_worktree_allowlist"), "passed")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 社区讨论与答疑 (GitHub Discussions)
+    url: https://github.com/pj1433139082-hue/learn-model-framework/discussions
+    about: 提问、分享模型实验经验或讨论通用设计方案，请前往 Discussions
+  - name: 📖 框架文档与开发总览 (Documentation)
+    url: https://github.com/pj1433139082-hue/learn-model-framework/tree/main/docs
+    about: 查看模型实验室生命周期、ADR 决策、SOP 与快速开始指南
+  - name: 🛡️ 安全漏洞与脱敏泄露通报 (Security Reporting)
+    url: https://github.com/pj1433139082-hue/learn-model-framework/security/advisories/new
+    about: 如发现潜在代码安全漏洞或数据脱敏风险，请通过专用私密通道通报，切勿公开提 Issue

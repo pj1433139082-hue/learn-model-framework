@@ -1,0 +1,72 @@
+name: "🧩 Model Adapter Proposal / 模型适配器提案"
+description: "为特定工业/水务模型算法或外部科学计算框架提议新增通用模板与适配契约"
+title: "[Adapter]: "
+labels: ["adapter", "enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        本框架支持通用时序、机理修正、分类与深度学习算法的标准化模板与离线推参验证。
+        如果你希望新增或扩展对某一类算法生态的适配，请在此提供设计细节。
+        **⚠️ 提醒**：所有输入输出点位描述请使用合成示例（如 `flow_in`, `cod_out`），严禁携带真实工厂测点编码。
+
+  - type: dropdown
+    id: algorithm-category
+    attributes:
+      label: "模型算法分类 (Algorithm Category)"
+      description: "请选择该适配器所属的算法技术栈分类"
+      options:
+        - "时序预测 (Time Series Forecasting - 如 Chronos, TimesFM, ARIMA, Prophet)"
+        - "机理修正与混合建模 (Hybrid / Physics-Informed - 如物料平衡修正、动力学拟合)"
+        - "树模型与经典机器学习 (Tree Models / Tabular - 如 LightGBM, XGBoost, CatBoost)"
+        - "深度学习与表征学习 (Deep Learning - 如 PyTorch, LSTM, Transformer, GNN)"
+        - "异常检测与软测量 (Anomaly Detection / Soft Sensing)"
+        - "水质/工艺优化与控制策略 (Optimization / Control)"
+        - "其他 (Other)"
+    validations:
+      required: true
+
+  - type: input
+    id: target-protocol
+    attributes:
+      label: "目标对接协议 (Target Runtime Protocol)"
+      description: "适配器需要对接的运行时协议（例如 ChronosServing / MultiPointServing / StandardMLflow / 离线推参批处理）"
+      placeholder: "e.g. Chronos-2025 / MLflow-pyfunc / CustomBatch"
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: "依赖的第三方科学计算与算法库 (External Dependencies)"
+      description: "适配器所依赖的 Python 库及其版本约束（需支持 Python 3.11）"
+      placeholder: "e.g. torch>=2.2.0, chronos-forecasting, statsmodels>=0.14"
+    validations:
+      required: true
+
+  - type: textarea
+    id: io-contract
+    attributes:
+      label: "输入输出与契约设计 (I/O & Contract Specification)"
+      description: "输入特征形式、采样周期（如 10m/1h）、预测窗口（horizon）以及输出格式规范"
+      placeholder: "输入: 历史 N 个步长的时间序列特征；输出: 未来 M 个步长的预测值与置信区间..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: validation-strategy
+    attributes:
+      label: "离线推参验证与指标评测建议 (Validation & Metric Strategy)"
+      description: "该类模型在框架内推荐的验证策略（例如时序滚动交叉验证、RMSE/MAE/MAPE/NSE 指标）"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: zero-leakage
+    attributes:
+      label: "脱敏与独立性声明 (Safety & Isolation)"
+      options:
+        - label: "我已核实并确认该提案为通用算法适配，未包含任何特定私有业务硬编码或生产环境测点。"
+          required: true
+        - label: "该适配器能在无私有服务依赖的环境下通过虚构合成数据跑通完整生命周期。"
+          required: true

@@ -1,0 +1,44 @@
+name: "📚 Documentation / 文档改进"
+description: "建议修正文档错漏、补充快速上手指南、改进 ADR 说明或更新架构设计文档"
+title: "[Docs]: "
+labels: ["documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        清晰准确的文档对开源社区至关重要。感谢你帮助完善 learn-model-framework 的文档库！
+
+  - type: input
+    id: doc-path
+    attributes:
+      label: "涉及的文档路径与小节 (Affected Document & Section)"
+      description: "指出存在问题或需更新的文件路径（可参照 `docs/` 下的章节）"
+      placeholder: "e.g. docs/00-入口层/04-人工操作快速开始.md 或 README.md"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: "问题、歧义或缺失说明 (Issue / Ambiguity / Missing Content)"
+      description: "当前文档存在什么错误、陈旧描述或令人困惑之处？"
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: "建议的修改或补充方案 (Suggested Change)"
+      description: "请提供你建议的文本、代码示例或改进思路"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: contribute-doc
+    attributes:
+      label: "是否愿意提交 PR 修复文档？ (Would you like to submit a PR?)"
+      options:
+        - "是，我可以直接提交 PR 修复 (Yes, I can submit a PR)"
+        - "否，希望维护者更新 (No, please maintainers update it)"
+    validations:
+      required: true

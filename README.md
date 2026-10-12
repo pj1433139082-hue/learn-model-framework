@@ -59,3 +59,11 @@ Linux 的第二步为 `bash scripts/bootstrap.sh --update`。第二步同步依�
 框架本机检查使用 `scripts/model-lab.ps1 test-profile local` 和 `scripts/model-lab.ps1 release-gate`。通用测试不能证明真实模型已上线；公司包、目标 Linux、真实取数与 MLflow 发布仍在私有模型任务中逐模型验收。[运行环境与发布](docs/10-流程层/13-运行环境与MLflow制品SOP.md)
 
 测试也要看 `status`、`complete` 与跳过原因：退出 0 的 `partial` 仍不是零跳过通过。例如 Windows 缺符号链接权限的用例可能跳过，须明确记录并在具备条件的环境补测。
+
+## 社区治理与许可证
+
+- **开源许可证**：本项目采用 [MIT License](LICENSE)。
+- **贡献指南**：请阅读 [CONTRIBUTING.md](CONTRIBUTING.md) 了解开发环境搭建、Commit 规范与门禁机制。
+- **行为准则**：本项目遵守 [Contributor Covenant 2.1 (CODE_OF_CONDUCT.md)](CODE_OF_CONDUCT.md)。
+- **安全政策**：如发现漏洞或敏感数据风险，请参照 [SECURITY.md](SECURITY.md) 通过私密安全通道通报，切勿公开提 Issue。
+

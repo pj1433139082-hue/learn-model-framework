@@ -44,6 +44,10 @@ decisions:
     level: CONFIRM
     required: true
     question: "模型输入数据获取源采用现场真实数采拉取（live-iot）还是离线静态基准文件（static-baseline）？若采用离线基准文件，原因与后续对齐计划是什么？"
+    allowed_choices:
+      - live-iot
+      - static-baseline
+    choice: static-baseline
     recommendation: "作为开源公开样板模型，采用离线静态基准文件与纯内存合成测试数据（static-baseline），已打上 offline-only 标签，展示标准契约而不连接真实生产 IoT 接口。"
     status: confirmed
     answer: "作为开源公开样板模型，采用离线静态基准文件与纯内存合成测试数据（static-baseline），已打上 offline-only 标签，展示标准契约而不连接真实生产 IoT 接口。"

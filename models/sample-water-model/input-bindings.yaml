@@ -1,20 +1,47 @@
-schema_version: '1.0'
+schema_version: '2.1'
 model_id: sample-water-model
-version: 0.1.0
-factory: DEMO_PLANT_01
+model_version: 0.1.0
+factory_code: DEMO_PLANT_01
 bindings:
-- target_field: influent_flow
-  point_code: DEMO_WWTP_INFLOW_01
-  signal_name: 进水总流量
+- input: influent_flow
+  expected_signal: 进水总流量
+  expected_signal_kind: instantaneous
   unit: m3/h
-  aggregation: latest
-- target_field: influent_cod
-  point_code: DEMO_WWTP_COD_01
-  signal_name: 进水COD在线仪表
+  aggregation: single
+  points:
+  - code: DEMO_PLANT_01-PT01-INFLOW_01
+    point_id: DEMO_PLANT_01-PT01
+    signal_code: INFLOW_01
+    facility_name: 进水泵房
+    equipment_name: 进水总管
+    acquisition_signal_name: 进水总流量
+    signal_kind: instantaneous
+    unit: m3/h
+- input: influent_cod
+  expected_signal: 进水COD在线仪表
+  expected_signal_kind: concentration
   unit: mg/L
-  aggregation: latest
-- target_field: influent_nh3n
-  point_code: DEMO_WWTP_NH3N_01
-  signal_name: 进水氨氮在线仪表
+  aggregation: single
+  points:
+  - code: DEMO_PLANT_01-PT02-COD_01
+    point_id: DEMO_PLANT_01-PT02
+    signal_code: COD_01
+    facility_name: 进水泵房
+    equipment_name: 水质监测柜
+    acquisition_signal_name: 进水COD在线仪表
+    signal_kind: concentration
+    unit: mg/L
+- input: influent_nh3n
+  expected_signal: 进水氨氮在线仪表
+  expected_signal_kind: concentration
   unit: mg/L
-  aggregation: latest
+  aggregation: single
+  points:
+  - code: DEMO_PLANT_01-PT03-NH3N_01
+    point_id: DEMO_PLANT_01-PT03
+    signal_code: NH3N_01
+    facility_name: 进水泵房
+    equipment_name: 水质监测柜
+    acquisition_signal_name: 进水氨氮在线仪表
+    signal_kind: concentration
+    unit: mg/L

@@ -1,7 +1,7 @@
 {
   "decisions": {
     "open_ids": [],
-    "source_sha256": "775eaf94f0a0302cab18eb018853b5e322e870f2be9c24658aa5173cea9dee78",
+    "source_sha256": "b939206560f8b3007799e31ea2c25c5adc101b1b35ca7f858ff717a454bf8c21",
     "status": "recorded",
     "summary": {
       "confirmed_count": 9,
@@ -29,19 +29,11 @@
   "schema_version": "1.0",
   "scope": "generated_repository_snapshot_not_live_platform",
   "serving": {
-    "binding": "input-bindings.yaml",
-    "binding_count": 3,
-    "binding_sha256": "c6c8bede94e2296a9e4129feb0a1ffbea8dfc0dfe748b861fb5b455aad66aed1",
-    "mode": "point-code",
-    "point_count": 0,
-    "point_fields": [
-      "influent_flow",
-      "influent_cod",
-      "influent_nh3n"
-    ],
-    "point_metadata": "incomplete"
+    "binding": null,
+    "mode": "numeric",
+    "point_metadata": "not_applicable"
   },
   "sources": {
-    "model.yaml": "8d8cfe55ffe1fe45c30a9ae2463d74a44d00a33adec69c8a72c37af31fbb1375"
+    "model.yaml": "53dbf7a0818f26d94238fe150908f2fda4fd2086e3e0e40329c0972e5a8e4695"
   }
 }

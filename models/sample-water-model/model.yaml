@@ -44,19 +44,4 @@ source:
   notebook_sha256: b60498606940208c148477ddaa9445ed2e5d64046287e3f138e3ddc202470da9
   documentation: model-spec.md
   documentation_sha256: 2e3885905b1e2eaf1f1b33d3737a39cc719c4f0a94fd1ffff55928a1d468e194
-serving:
-  mode: point-code
-  factory_field: factory_code
-  point_fields:
-  - influent_flow
-  - influent_cod
-  - influent_nh3n
-  start_field: target_date
-  time:
-    strategy: target-date-day
-    timezone: Asia/Shanghai
-    iot_timestamp_timezone: UTC
-  rolling_window: 1d
-  interval: 10min
-  binding: input-bindings.yaml
 artifacts: []

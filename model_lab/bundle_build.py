@@ -10,7 +10,7 @@ from dataclasses import dataclass
 import hashlib
 from importlib.metadata import version
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import runpy
 import shutil
 from tempfile import TemporaryDirectory
@@ -86,6 +86,63 @@ def _regular_file(path: Path, *, maximum: int, label: str) -> bytes:
     if path.stat().st_size > maximum:
         raise BundleBuildError("input_too_large", f"{label} exceeds {maximum} bytes: {path}")
     return path.read_bytes()
+
+
+def _portable_mlmodel(bundle: Path) -> None:
+    """Rewrite MLflow's recorded artifact locations into bundle-relative POSIX paths.
+
+    MLflow records native separators and the saving host's own source paths. A bundle built on
+    Windows then carries ``artifacts\\logic_bundle.pkl``, which the Linux runtime cannot resolve,
+    and the recorded ``uri`` leaks the build machine's directory layout into the published
+    artifact. Only recorded locations that normalize to a safe relative path are rewritten;
+    anything absolute, escaping, or malformed is left untouched so bundle verification reports it.
+    """
+    path = bundle / "MLmodel"
+    document = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if not isinstance(document, dict):
+        return
+    flavors = document.get("flavors")
+    python_function = flavors.get("python_function") if isinstance(flavors, dict) else None
+    mappings = (
+        python_function.get("artifacts") if isinstance(python_function, dict) else None
+    )
+    if isinstance(mappings, dict):
+        entries: list[object] = list(mappings.values())
+    elif isinstance(mappings, list):
+        entries = list(mappings)
+    else:
+        return
+    changed = False
+    for value in entries:
+        if not isinstance(value, dict):
+            continue
+        recorded = value.get("path")
+        if not isinstance(recorded, str) or not recorded:
+            continue
+        portable = PurePosixPath(recorded.replace("\\", "/"))
+        if (
+            portable.is_absolute()
+            or ":" in recorded
+            or any(part in {"", ".", ".."} for part in portable.parts)
+        ):
+            continue
+        safe = portable.as_posix()
+        if recorded != safe:
+            value["path"] = safe
+            changed = True
+        if value.get("uri") != safe:
+            value["uri"] = safe
+            changed = True
+    if not changed:
+        return
+    path.write_text(
+        yaml.safe_dump(
+            document, allow_unicode=True, sort_keys=False, default_flow_style=False
+        ),
+        encoding="utf-8",
+        newline="\n",
+    )
+
 
 
 def _tree_digest(directory: Path) -> str:
@@ -330,6 +387,7 @@ def build_bundle(
             input_example=None if serving else example.head(1),
             pip_requirements=[f"{name}=={pin}" for name, pin in pins.items()],
         )
+        _portable_mlmodel(staged_bundle)
         if serving is None:
             loaded = mlflow.pyfunc.load_model(str(staged_bundle))
             actual = loaded.predict(example)

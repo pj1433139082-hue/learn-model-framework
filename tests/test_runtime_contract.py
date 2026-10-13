@@ -447,45 +447,48 @@ class BundleVerificationTests(unittest.TestCase):
 
         self.assertIn("missing_mlflow_pyfunc_flavor", {issue.code for issue in report.issues})
 
-    def test_windows_mlflow_artifact_paths_normalize_without_allowing_traversal(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            document = manifest_document()
-            target = document["target"]
-            assert isinstance(target, dict)
-            target_environment = target["environment"]
-            assert isinstance(target_environment, dict)
-            target_environment["operating_system"] = "windows"
-            manifest = write_manifest(root, document)
-            write_lock(root)
-            bundle = write_valid_bundle(root)
-            mlmodel_path = bundle / "MLmodel"
-            mlmodel = yaml.safe_load(mlmodel_path.read_text(encoding="utf-8"))
-            mappings = mlmodel["flavors"]["python_function"]["artifacts"]
-            for value in mappings.values():
-                value["path"] = value["path"].replace("/", "\\")
-            mlmodel_path.write_text(
-                yaml.safe_dump(mlmodel, sort_keys=False), encoding="utf-8"
-            )
-
-            valid = verify_mlflow_bundle(manifest, bundle)
-            self.assertTrue(valid.valid, valid.as_dict())
-            self.assertEqual(
-                dict(valid.artifact_paths)["logic_bundle"],
-                "artifacts/logic_bundle.pkl",
-            )
-
-            for unsafe in ("..\\outside.pkl", "C:\\secret.pkl", "\\\\host\\share.pkl"):
-                with self.subTest(path=unsafe):
-                    mappings["logic_bundle"]["path"] = unsafe
+    def test_native_artifact_separators_are_rejected_for_every_target_platform(self) -> None:
+        for operating_system in ("windows", "linux"):
+            with self.subTest(target=operating_system):
+                with tempfile.TemporaryDirectory() as temporary:
+                    root = Path(temporary)
+                    document = manifest_document()
+                    target = document["target"]
+                    assert isinstance(target, dict)
+                    target_environment = target["environment"]
+                    assert isinstance(target_environment, dict)
+                    target_environment["operating_system"] = operating_system
+                    manifest = write_manifest(root, document)
+                    write_lock(root)
+                    bundle = write_valid_bundle(root)
+                    mlmodel_path = bundle / "MLmodel"
+                    mlmodel = yaml.safe_load(mlmodel_path.read_text(encoding="utf-8"))
+                    mappings = mlmodel["flavors"]["python_function"]["artifacts"]
+                    for value in mappings.values():
+                        value["path"] = value["path"].replace("/", "\\")
                     mlmodel_path.write_text(
                         yaml.safe_dump(mlmodel, sort_keys=False), encoding="utf-8"
                     )
-                    invalid = verify_mlflow_bundle(manifest, bundle)
+
+                    report = verify_mlflow_bundle(manifest, bundle)
+
+                    self.assertFalse(report.valid, report.as_dict())
                     self.assertIn(
                         "unsafe_bundle_artifact_path",
-                        {issue.code for issue in invalid.issues},
+                        {issue.code for issue in report.issues},
                     )
+
+                    for unsafe in ("..\\outside.pkl", "C:\\secret.pkl", "\\\\host\\share.pkl"):
+                        with self.subTest(path=unsafe):
+                            mappings["logic_bundle"]["path"] = unsafe
+                            mlmodel_path.write_text(
+                                yaml.safe_dump(mlmodel, sort_keys=False), encoding="utf-8"
+                            )
+                            invalid = verify_mlflow_bundle(manifest, bundle)
+                            self.assertIn(
+                                "unsafe_bundle_artifact_path",
+                                {issue.code for issue in invalid.issues},
+                            )
 
     def test_windows_native_runtime_cannot_pass_a_linux_bundle(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

@@ -545,15 +545,17 @@ def _safe_bundle_artifact_path(value: object) -> str | None:
     return relative.as_posix()
 
 
-def _artifact_mapping_path(value: object, *, operating_system: str) -> str | None:
+def _artifact_mapping_path(value: object) -> str | None:
+    """Resolve a recorded artifact location; native separators are never portable.
+
+    MLflow records the saving host's own separators. A bundle whose recorded path uses
+    backslashes cannot be resolved by the Linux runtime, so it is rejected for every declared
+    target instead of being normalized: a Windows-built bundle is deployable only when the
+    builder already recorded portable paths (see ``bundle_build._portable_mlmodel``).
+    """
     raw = value.get("path") if isinstance(value, Mapping) else value
     if not isinstance(raw, str):
         return None
-    # MLflow writes native separators into MLmodel on Windows. Normalize only
-    # for a Windows target; the safety check still rejects absolute, UNC,
-    # repeated-separator, drive-qualified, and traversal paths.
-    if operating_system == "windows":
-        raw = raw.replace("\\", "/")
     return _safe_bundle_artifact_path(raw)
 
 
@@ -891,9 +893,7 @@ def verify_mlflow_bundle(
                         )
                     )
                 else:
-                    model_relative = _artifact_mapping_path(
-                        python_model, operating_system=environment.operating_system
-                    )
+                    model_relative = _artifact_mapping_path(python_model)
                     if model_relative is None:
                         issues.append(
                             _issue(
@@ -931,9 +931,7 @@ def verify_mlflow_bundle(
                         )
                     )
                     continue
-                artifact_relative = _artifact_mapping_path(
-                    mappings[name], operating_system=environment.operating_system
-                )
+                artifact_relative = _artifact_mapping_path(mappings[name])
                 if artifact_relative is None:
                     issues.append(
                         _issue(

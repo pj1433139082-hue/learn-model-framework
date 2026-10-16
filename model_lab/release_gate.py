@@ -114,6 +114,17 @@ def _git(root: Path, *arguments: str) -> subprocess.CompletedProcess[bytes]:
     )
 
 
+def _is_reviewed_sample_model(parts: tuple[str, ...]) -> bool:
+    """The shared framework ships exactly one reviewed sample model (ADR 0025).
+
+    ``models/sample-water-model/**`` and its ``models/README.md`` index are the
+    only ``models`` paths the framework checkout may contain; every other
+    ``models`` path stays forbidden by ``_path_issue``.
+    """
+
+    return parts[:2] == ("models", "sample-water-model") or parts == ("models", "readme.md")
+
+
 def _path_issue(relative: str, *, framework: bool) -> str | None:
     path = PurePosixPath(relative.replace("\\", "/"))
     parts = tuple(part.casefold() for part in path.parts)
@@ -125,6 +136,8 @@ def _path_issue(relative: str, *, framework: bool) -> str | None:
         return "private model or unreviewed top-level path is not part of the shared framework"
     if any(part in {"models", "data", "artifacts", "__pycache__", ".venv", "venv"}
            or part.startswith((".venv-", "venv-")) for part in parts):
+        if framework and _is_reviewed_sample_model(parts):
+            return None
         return "private models, datasets, artifacts, and virtual environments are forbidden"
     if path.name.casefold() in {".env", "credentials.json", "id_rsa", "id_ed25519"}:
         return "credential file is forbidden"

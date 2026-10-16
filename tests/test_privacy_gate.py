@@ -182,6 +182,52 @@ class PrivacyGateTests(unittest.TestCase):
             self.assertTrue(report.valid, report.as_text())
             self.assertEqual(_check_status(report, "shared_index_allowlist"), "passed")
             self.assertEqual(_check_status(report, "shared_worktree_allowlist"), "passed")
+    def test_reviewed_sample_model_paths_are_allowed(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="framework-gate-") as directory:
+            root = Path(directory)
+            _init_repository(root)
+            readme = root / "README.md"
+            readme.write_text("A synthetic framework\n", encoding="utf-8")
+            _git(root, "add", "README.md")
+            _commit(root, "initial")
+
+            index = root / "models" / "README.md"
+            index.parent.mkdir(parents=True)
+            index.write_text("Reviewed sample model index.\n", encoding="utf-8")
+            sample = root / "models" / "sample-water-model" / "model.yaml"
+            sample.parent.mkdir(parents=True)
+            sample.write_text("model: sample\n", encoding="utf-8")
+            _git(root, "add", "--force", "models")
+            _commit(root, "reviewed sample model")
+
+            report = run_release_gate(root)
+            self.assertTrue(report.valid, report.as_text())
+            self.assertEqual(_check_status(report, "shared_index_allowlist"), "passed")
+            self.assertEqual(_check_status(report, "shared_worktree_allowlist"), "passed")
+            self.assertEqual(_check_status(report, "complete_git_history"), "passed")
+
+    def test_unreviewed_models_path_stays_rejected_next_to_sample_model(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="framework-gate-") as directory:
+            root = Path(directory)
+            _init_repository(root)
+            readme = root / "README.md"
+            readme.write_text("A synthetic framework\n", encoding="utf-8")
+            _git(root, "add", "README.md")
+            _commit(root, "initial")
+
+            for relative in ("models/sample-water-model/model.yaml", "models/05_private/model.yaml"):
+                target = root / relative
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text("model: sample\n", encoding="utf-8")
+            _git(root, "add", "--force", "models")
+            _commit(root, "sample model plus private model")
+
+            report = run_release_gate(root)
+            self.assertFalse(report.valid)
+            self.assertEqual(
+                [issue.subject for issue in report.issues if issue.rule == "index_path"],
+                ["models/05_private/model.yaml"],
+            )
 
 
 if __name__ == "__main__":

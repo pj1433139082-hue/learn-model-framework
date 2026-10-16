@@ -37,7 +37,8 @@ class FrameworkFlowTests(unittest.TestCase):
         )
         self.assertEqual(code, 2)
         self.assertIn("models_root_inside_framework", errors)
-        self.assertFalse((root / "models").exists())
+        # 分发面本就含 models/sample-water-model，故只断言没有新建出这张卡（既有红项修正）
+        self.assertFalse((root / "models" / "example-flow").exists())
 
     def test_external_private_root_new_context_and_status(self) -> None:
         with tempfile.TemporaryDirectory(prefix="model-lab-external-") as directory:

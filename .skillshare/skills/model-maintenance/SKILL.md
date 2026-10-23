@@ -3,6 +3,8 @@ name: model-maintenance
 description: Maintain a private released model asset without overwriting its history. Use for bug fixes, Python 3.11 migration, formula or threshold changes, new plant adaptation, repackaging, or retirement of an existing model.
 ---
 
+> contract: workflow=maintenance-lifecycle-v1,contract-upgrade-lifecycle-v1 steps=maintenance-scope,contract-upgrade,data-source,data-quality,verification,visual-review,notebook,release,operations
+
 # Model Maintenance
 
 Inherit the task's interaction mode from `$model-lab-router`; do not ask for a
@@ -29,7 +31,9 @@ When the deployed Run is not identified, mark it unresolved; the latest or only
 Run in an experiment is a candidate, not proof of what the platform serves.
 
 For behavior-unchanged Python 3.11 work, use `model-lab maintain <released-model>
---version <next-patch>` to preview, then `--apply` inside the assigned local task.
+--version <next-patch>` to preview, then
+`model-lab maintain <released-model> --version <next-patch> --apply` inside
+the assigned local task.
 It creates a separate versioned workspace under `models/_drafts/` while keeping
 the released directory untouched. Verify its parent lineage with `status` and
 the whole repository with `release-gate`; never edit the old `released` manifest
@@ -50,7 +54,9 @@ evidence, and create a separate baseline for the changed online contract.
 Never mark model-specific point/window decisions confirmed from a generic
 example. Group currently independent model-specific questions in one review
 round and record the full answer once; do not request another confirmation for
-the same unchanged answer after `maintain --apply` or `advance --apply`.
+the same unchanged answer after
+`maintain <released-model> --version <next-patch> --apply` or
+`advance <workspace> --apply`.
 
 First classify the work:
 

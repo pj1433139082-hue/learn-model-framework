@@ -3,13 +3,15 @@ name: model-build-validate
 description: Build and validate a model after its contract is confirmed, producing reproducible source, Notebook, tests, plots, artifacts, and behavior evidence. Use for implementation, model analysis, test work, visualization review, or behavior-baseline validation.
 ---
 
+> contract: workflow=model-lifecycle-v1 steps=verification,visual-review,notebook
+
 # Model Build and Validate
 
 Inherit the task's interaction mode and scenario from `$model-lab-router`;
 do not ask for a second mode choice. Use the build/validation row in
 `docs/00-入口层/06-模型任务问答与交互档位.md`.
 
-Begin with `model-lab status`. Do not implement while required `specified` decisions
+Begin with `model-lab status <workspace>`. Do not implement while required `specified` decisions
 remain open. Treat `model.yaml` as the contract and preserve the Python 3.11 runtime
 profile.
 

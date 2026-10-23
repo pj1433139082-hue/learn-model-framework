@@ -22,6 +22,7 @@ SKILL_NAMES = (
     "model-build-validate",
     "model-data-audit",
     "model-lab-router",
+    "model-lab-setup",
     "model-maintenance",
     "model-requirements-grill",
     "model-runtime-release",

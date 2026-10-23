@@ -3,10 +3,12 @@ name: model-requirements-grill
 description: Elicit, recommend, confirm, and record a model's business contract and design decisions before implementation. Use for a new model or when purpose, inputs, outputs, acceptance criteria, formulas, parameters, measurements, or boundary behavior changes.
 ---
 
+> contract: workflow=model-lifecycle-v1 steps=requirements,design
+
 # Model Requirements Grill
 
 Read the target `model.yaml`, `decisions.yaml`, `model-spec.md`, and current
-`model-lab status` report. For a new model, load only the requirement and design
+`model-lab status <workspace>` report. For a new model, load only the requirement and design
 sections of `docs/10-流程层/11-新模型开发SOP.md`.
 
 Use the task type and chosen interaction mode from `$model-lab-router`; follow the
@@ -44,8 +46,9 @@ different identity. Do not separate business, technical, and release roles.
 
 Never save “按推荐” as the answer. A single “全部按推荐” applies only to the
 recommendations actually presented together, not future evidence-dependent
-confirmations. An explicit task to create or develop this model
-covers local `new --apply` and gated `advance --apply` within the agreed workspace;
-do not interrupt for a separate authorization at every transition. Finish by
-rerunning `model-lab status`; do not bypass a failed gate by editing
+confirmations. An explicit task to create or develop this model covers local
+`new <model-id> --name <display-name> --owner <owner> --apply` and gated
+`advance <workspace> --apply` within the agreed workspace; do not interrupt for
+a separate authorization at every transition. Finish by rerunning
+`model-lab status <workspace>`; do not bypass a failed gate by editing
 `model.lifecycle_state` directly.

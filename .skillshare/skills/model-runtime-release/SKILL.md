@@ -3,6 +3,8 @@ name: model-runtime-release
 description: Prepare and verify Python 3.11 model runtime and MLflow release artifacts without assuming publication authority. Use for environment diagnosis, CPU/GPU/Chronos runtime contracts, bundle preflight, deployment planning, rollback planning, or release authorization.
 ---
 
+> contract: workflow=model-lifecycle-v1 steps=release
+
 # Model Runtime and Release
 
 The active training, validation, packaging, and deployment contract is Python
@@ -63,15 +65,17 @@ recorded. Evidence-dependent plans remain open until their evidence exists.
 Record full recommendations and answers in `decisions.yaml`; the status decision
 summary provides the digest that a future immutable release snapshot must bind.
 
-An explicit model-development task covers local `new --apply`, `bundle-build --apply`,
-and gated `advance --apply` through `releasable`; do not ask for a fresh authorization
-for each local step. Git remote changes and real publication require a bounded,
-explicit task instruction. A user's clear request to upload one specified
-model/version to one experiment is that transaction's instruction; do not ask
-for a second confirmation of the same unchanged upload. A push does not
-authorize a merge unless the instruction
-clearly includes it; changed target or content requires renewed direction. Do not
-store `AUTHORIZE` as a standing decision.
+An explicit model-development task covers local
+`new <model-id> --name <display-name> --owner <owner> --apply`,
+`bundle-build <manifest> --sample-csv <csv> --apply`, and gated
+`advance <workspace> --apply` through `releasable`; do not ask for a fresh
+authorization for each local step. Git remote changes and real publication
+require a bounded, explicit task instruction. A user's clear request to upload
+one specified model/version to one experiment is that transaction's instruction;
+do not ask for a second confirmation of the same unchanged upload. A push does
+not authorize a merge unless the instruction clearly includes it; changed target
+or content requires renewed direction. Do not store `AUTHORIZE` as a standing
+decision.
 
 For publication, ask the user only for the platform experiment name/model number and
 the author/account label if they are not already known. Resolve the target from the
@@ -92,6 +96,6 @@ downloaded service digest, and platform-path prediction as MLflow publication
 success. Do not require a company business-platform manual task call, production
 scheduling, Git push, or local `released` status to make that claim. Report any
 unverified business-platform integration separately, only as relevant to the
-user's scope. `model-lab status` is a local lifecycle check; its manual
+user's scope. `model-lab status <workspace>` is a local lifecycle check; its manual
 `releasable -> released` transition still needs a release snapshot but does not
 invalidate a completed MLflow Run. See ADR 0017.

@@ -3,6 +3,8 @@ name: model-data-audit
 description: Audit model data, measurements, quality, and anomaly handling before a build decision is confirmed. Use when a model needs source-data inspection, field mapping, quality evidence, or a decision about missing, abnormal, stale, or physically implausible values.
 ---
 
+> contract: workflow=model-lifecycle-v1 steps=data-source,data-quality
+
 # Model Data Audit
 
 Use the scenario and interaction mode already selected by `$model-lab-router`;
@@ -28,4 +30,4 @@ round, then wait for confirmation. Do not ask the user to approve each data quer
 After confirmation, update the data-quality section of `model-spec.md` and the
 matching `build-data-quality-treatment` decision with the complete recommendation and
 answer. Do not change the algorithm, contract, or threshold silently. Rerun
-`model-lab status` and leave unrelated later-stage decisions open.
+`model-lab status <workspace>` and leave unrelated later-stage decisions open.

@@ -100,13 +100,13 @@ For each missing or unconfigured item:
    verify-publication and online acceptance):
    - Ask the user to provide the ZIP path, then verify the SHA-256 as in step 1.4.
    - Persist it once so later commands need no flag:
-     `python -m model_lab setup --models-root models --company-iot-zip <ZIP> --apply`
+     `python -m model_lab setup --models-root <external-private-dir> --company-iot-zip <ZIP> --apply`
      which writes the path into the Git-ignored `.model-lab.local.json`. When the private
      models root is not used on this machine, set the environment variable instead:
      `setx MODEL_LAB_COMPANY_IOT_ZIP "<ZIP path>"` (new terminals pick it up).
-     The models root must be this repository's `models` directory (ADR 0050): a path outside
-     the checkout fails with `models_root_outside_framework`, and any other directory name
-     (including a nested `models/_drafts`) fails with `models_root_not_models_directory`.
+     The models root must be a directory outside this framework checkout: a path inside
+     the checkout (including `models` and `models/_drafts`) fails with
+     `models_root_inside_framework`. This framework checkout never stores private models.
    - `setup --apply` refuses an unreviewed ZIP: it reports `company_zip_unreviewed`, marks
      the run invalid and writes nothing, so a wrong path never gets persisted.
    - After persistence, `publish`, `verify-publication`, `bundle-build --iot-package-zip`

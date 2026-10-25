@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
 import unittest
 from unittest.mock import patch
 from typing import TextIO
@@ -148,6 +149,20 @@ class TestProfileReport:
         return "\n".join(lines)
 
 
+
+
+def _tempdir_blocker() -> tuple[str, ...]:
+    """Fail with an actionable diagnosis when Python's temp root is unusable."""
+    try:
+        with tempfile.TemporaryDirectory(prefix="model-lab-preflight-"):
+            pass
+    except OSError as error:
+        return (
+            f"Python temp directory is not writable ({tempfile.gettempdir()}): {error}; "
+            "set TEMP/TMP to a writable local directory and rerun",
+        )
+    return ()
+
 def _blockers(profile: str, environment: ProfileEnvironment) -> tuple[str, ...]:
     problems: list[str] = []
     if environment.python_minor != (3, 11):
@@ -219,6 +234,9 @@ def run_test_profile(
     blockers = _blockers(profile, observation)
     if blockers:
         return TestProfileReport(profile, "blocked", 0, 0, (), (), (), blockers)
+    tempdir_blockers = _tempdir_blocker()
+    if tempdir_blockers:
+        return TestProfileReport(profile, "blocked", 0, 0, (), (), (), tempdir_blockers)
     if suite is None:
         preflight_blockers = (
             _repository_blockers() if profile == "local" else ()

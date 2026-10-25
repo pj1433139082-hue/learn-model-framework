@@ -33,3 +33,4 @@ __pycache__/
 /.agents/skills/
 /.model-lab.local.json
 /.model-lab/
+/.cache/

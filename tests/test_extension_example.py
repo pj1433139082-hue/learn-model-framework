@@ -20,6 +20,7 @@ class InstalledExtensionExampleTests(unittest.TestCase):
     def test_setuptools_entry_point_and_private_module_in_temporary_environment(self) -> None:
         with tempfile.TemporaryDirectory(prefix="private-extension-example-") as temp_dir:
             root = Path(temp_dir)
+            self._uv_cache_dir = root / "uv-cache"
             package_source = root / "private-extension"
             shutil.copytree(FIXTURE_ROOT, package_source)
 
@@ -84,6 +85,9 @@ class InstalledExtensionExampleTests(unittest.TestCase):
         capture_output: bool = True,
     ) -> subprocess.CompletedProcess[str]:
         environment = os.environ.copy()
+        uv_cache_dir = getattr(self, "_uv_cache_dir", None)
+        if uv_cache_dir is not None:
+            environment["UV_CACHE_DIR"] = str(uv_cache_dir)
         environment.pop("PYTHONPATH", None)
         environment["PIP_NO_INDEX"] = "1"
         environment["PIP_DISABLE_PIP_VERSION_CHECK"] = "1"

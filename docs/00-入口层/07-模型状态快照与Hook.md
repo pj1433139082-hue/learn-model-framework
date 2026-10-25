@@ -6,6 +6,8 @@ tags: [kind/guide, topic/mlops, entry]
 
 # 模型状态快照与 Hook
 
+> **本仓是公开框架分发仓**：`step-check`、`ledger`、`.dsh-hooks` 属私有源仓的每步核对机制，本仓未提供；本仓请用 `model-lab status` / `model-lab context`，hook 用 `.codex/hooks.json`。下文保留私有源仓原文作为决策背景。
+
 每个模型版本目录的 `workflow-state.json` 是生成索引，供人和智能体快速判断
 “这个版本当前处于哪一阶段、测点资料是否适用、仓库里有什么发布记录”。
 事实仍以同目录 `model.yaml`、`decisions.yaml`、`input-bindings.yaml` 和

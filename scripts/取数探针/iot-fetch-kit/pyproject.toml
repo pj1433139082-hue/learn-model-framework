@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "iot-fetch-kit"
+version = "1.0.0"
+description = "直连 REST 的 IoT 历史数据批量取数（可整体拷到别的项目使用的独立包）"
+readme = "README.md"
+requires-python = ">=3.9"
+keywords = ["iot", "timeseries", "parquet", "rest", "data-fetch"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+]
+dependencies = ["requests>=2.28"]
+
+[project.optional-dependencies]
+parquet = ["pandas>=2.0", "pyarrow>=14"]
+ledger = ["pandas>=2.0", "openpyxl>=3.1"]
+all = ["pandas>=2.0", "pyarrow>=14", "openpyxl>=3.1"]
+
+[project.scripts]
+iot-fetch = "iot_fetch.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["iot_fetch*"]

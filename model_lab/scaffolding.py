@@ -11,6 +11,7 @@ from pathlib import Path, PurePosixPath
 import re
 import shutil
 import tempfile
+import uuid
 from typing import Final
 import unicodedata
 
@@ -665,6 +666,24 @@ def _check_destination(models_root: Path, model_id: str) -> Path:
     return destination
 
 
+def _probe_writable_directory(directory: Path) -> None:
+    """Fail fast before tempfile.mkdtemp can loop on a lying Windows ACL."""
+
+    probe = directory / f".write-probe-{uuid.uuid4().hex}"
+    try:
+        probe.mkdir()
+    except OSError as error:
+        raise WorkspaceError(
+            "workspace_write_failed",
+            f"workspace directory is not writable: {directory}: {error}",
+        ) from error
+    finally:
+        try:
+            probe.rmdir()
+        except OSError:
+            pass
+
+
 def _write_workspace(
     destination: Path,
     rendered: dict[PurePosixPath, str | bytes],
@@ -674,6 +693,7 @@ def _write_workspace(
     try:
         drafts_root.mkdir(parents=True, exist_ok=True)
         _refuse_symlink(drafts_root, "drafts root")
+        _probe_writable_directory(drafts_root)
         temporary = Path(
             tempfile.mkdtemp(prefix=f".{destination.name}-", dir=str(drafts_root))
         )

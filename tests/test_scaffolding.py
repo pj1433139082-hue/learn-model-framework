@@ -8,6 +8,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from typing import Any
+from unittest.mock import patch
 
 import yaml  # type: ignore[import-untyped]
 
@@ -488,6 +489,15 @@ class ScaffoldModelTests(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("point-code serving requires cpu-iot", result.stderr)
 
+
+
+    def test_apply_fails_fast_when_drafts_root_is_not_writable(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            models = Path(temporary) / "models"
+            with patch.object(Path, "mkdir", side_effect=PermissionError("denied")):
+                with self.assertRaises(WorkspaceError) as raised:
+                    scaffold_model(request(), models, apply=True)
+        self.assertEqual(raised.exception.code, "workspace_write_failed")
 
 if __name__ == "__main__":
     unittest.main()

@@ -34,3 +34,7 @@ __pycache__/
 /.model-lab.local.json
 /.model-lab/
 /.cache/
+
+# Local IoT credentials, never commit
+scripts/取数探针/iot-credentials.local.json
+scripts/取数探针/*.local.json

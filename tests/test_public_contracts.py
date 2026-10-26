@@ -29,6 +29,15 @@ class PublicDocsContractTests(unittest.TestCase):
                 self.assertIn("本仓是公开框架分发仓", text)
                 self.assertIn("step-check", text)
 
+    def test_private_adrs_carry_public_banner(self) -> None:
+        adr_dir = REPOSITORY_ROOT / "docs" / "adr"
+        for path in sorted(adr_dir.glob("*.md")):
+            text = path.read_text(encoding="utf-8")
+            if "step-check" not in text and ".dsh-hooks" not in text:
+                continue
+            with self.subTest(path=path.name):
+                self.assertIn("本 ADR 保留私有源仓原文", text)
+
     def test_setup_skill_requires_external_models_root(self) -> None:
         text = _read(".skillshare/skills/model-lab-setup/SKILL.md")
         self.assertIn("models_root_inside_framework", text)

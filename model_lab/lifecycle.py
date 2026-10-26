@@ -23,7 +23,7 @@ from model_lab.path_safety import (
     first_link_or_junction_component,
     is_link_or_junction,
 )
-from model_lab.release_gate import scan_workspace_tree
+from model_lab.release_gate import off_flow_issues, scan_workspace_tree
 from model_lab.runtime_contract import (
     RuntimeCheckReport,
     check_build_environment,
@@ -76,6 +76,14 @@ class LifecycleReport:
     pending_confirmations: tuple[InteractionDecision, ...]
 
     @property
+    def next_command(self) -> str:
+        """One command the operator should run next."""
+
+        if self.can_advance:
+            return f"model-lab advance {Path(self.manifest).parent} --apply"
+        return f"model-lab status {Path(self.manifest).parent}"
+
+    @property
     def build_host_status(self) -> str:
         if not self.build_environment.issues:
             return "ready"
@@ -107,6 +115,7 @@ class LifecycleReport:
             "decision_summary": self.decision_register.summary(),
             "build_environment": self.build_environment.as_dict(),
             "build_host_status": self.build_host_status,
+            "next_command": self.next_command,
             "safety": {"remote_access": False, "remote_writes": False},
         }
 
@@ -133,6 +142,7 @@ class LifecycleReport:
             f"- [{'PASS' if gate.passed else 'BLOCK'}] {gate.gate_id}: {gate.message}"
             for gate in self.gates
         )
+        lines.append(f"Next command: {self.next_command}")
         lines.append("Open questions:")
         if self.open_questions:
             for item in self.open_questions:
@@ -1008,8 +1018,10 @@ def _gate_artifact_digests_recorded(document: Mapping[str, Any]) -> GateResult:
     )
 
 
-def _gate_workspace_safe(workspace: Path) -> GateResult:
-    issues = scan_workspace_tree(workspace)
+def _gate_workspace_safe(workspace: Path, document: Mapping[str, Any]) -> GateResult:
+    model = document.get("model")
+    state = model.get("lifecycle_state") if isinstance(model, Mapping) else ""
+    issues = scan_workspace_tree(workspace) + (off_flow_issues(workspace, str(state)) if isinstance(state, str) else ())
     if issues:
         first = issues[0]
         safe_subject = first.as_dict()["subject"]
@@ -1042,7 +1054,7 @@ def _evaluate_gates(
             continue
         check = gate["check"]
         if check == "workspace-safe":
-            results.append(_gate_workspace_safe(workspace))
+            results.append(_gate_workspace_safe(workspace, document))
         elif check == "scaffold-metadata-valid":
             results.append(_gate_scaffold_metadata_valid(workspace))
         elif check == "manifest-valid":

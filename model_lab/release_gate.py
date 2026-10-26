@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
+import json
 import os
 import re
 import subprocess
@@ -156,6 +157,41 @@ def _content_issue(content: bytes) -> str | None:
     if any(pattern.search(content) for pattern in _PRIVATE_IDENTIFIERS):
         return "private identifier or personal path detected"
     return None
+
+
+_PLACEHOLDER_TEXT = re.compile(r"\b(?:TODO|TBD|PLACEHOLDER)\b|待补|占位", re.IGNORECASE)
+
+
+def off_flow_issues(workspace: str | Path, state: str) -> tuple[GateIssue, ...]:
+    """Report files written for a later lifecycle stage than *state*."""
+
+    root = Path(workspace)
+    found: list[GateIssue] = []
+
+    def real_text(path: Path) -> str:
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeError):
+            return ""
+        return "" if _PLACEHOLDER_TEXT.search(text) else text
+
+    if state == "draft":
+        for relative in (Path("src") / "model.py", Path("tests") / "test_model.py"):
+            if real_text(root / relative):
+                found.append(GateIssue("off_flow_artifact", relative.as_posix(), "later-stage artifact exists before the lifecycle gate"))
+        notebook = root / "notebooks" / "model.ipynb"
+        if notebook.is_file():
+            try:
+                cells = json.loads(notebook.read_text(encoding="utf-8")).get("cells", [])
+            except (OSError, UnicodeError, json.JSONDecodeError):
+                cells = []
+            if isinstance(cells, list) and len(cells) > 1:
+                found.append(GateIssue("off_flow_artifact", "notebooks/model.ipynb", "multi-cell notebook exists before the lifecycle gate"))
+    if state in {"draft", "specified"} and (root / "release-bundle").is_dir():
+        found.append(GateIssue("off_flow_artifact", "release-bundle/", "release bundle exists before the lifecycle gate"))
+    if state != "released" and (root / "validation" / "publications").is_dir():
+        found.append(GateIssue("off_flow_artifact", "validation/publications/", "publication receipt exists before the lifecycle gate"))
+    return tuple(found)
 
 
 def scan_workspace_tree(workspace: str | Path) -> tuple[GateIssue, ...]:

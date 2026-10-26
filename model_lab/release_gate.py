@@ -166,6 +166,9 @@ def scan_workspace_tree(workspace: str | Path) -> tuple[GateIssue, ...]:
     issues: list[GateIssue] = []
     for path in root.rglob("*"):
         relative = path.relative_to(root).as_posix()
+        raw_parts = path.relative_to(root).parts
+        if any(part in {"__pycache__", ".pytest_cache"} for part in raw_parts) or path.suffix.casefold() in {".pyc", ".pyo"}:
+            continue
         if is_link_or_junction(path):
             issues.append(GateIssue("workspace_link", relative, "links are forbidden"))
             continue

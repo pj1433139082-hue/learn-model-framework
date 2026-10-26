@@ -1,5 +1,7 @@
 # 0049 _drafts 出口判据：verified 回执加 archive-release --apply
 
+> 本 ADR 保留私有源仓原文；`step-check`、`ledger`、`.dsh-hooks` 在本公开框架分发仓未实现，请以 `status`、`context`、`.codex/hooks.json` 为准。
+
 - 状态：已接受
 - 日期：2026-10-20
 

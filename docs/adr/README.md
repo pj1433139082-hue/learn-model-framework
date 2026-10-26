@@ -1,5 +1,7 @@
 # 架构决策记录 (ADR)
 
+> 本 ADR 保留私有源仓原文；`step-check`、`ledger`、`.dsh-hooks` 在本公开框架分发仓未实现，请以 `status`、`context`、`.codex/hooks.json` 为准。
+
 本目录记录北控模型实验室通用算法框架的系统级技术架构决策。编号以权威源保持严格一致。
 
 ## 放什么

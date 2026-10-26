@@ -16,7 +16,7 @@ test = [
   "numpy==2.3.3",
   "pandas==2.3.3",
 ]
-publish = ["boto3==1.43.103"]
+publish = ["boto3==1.43.118"]
 
 [project.scripts]
 model-lab = "model_lab.cli:main"

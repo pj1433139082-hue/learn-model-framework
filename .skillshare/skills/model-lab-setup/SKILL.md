@@ -99,11 +99,10 @@ For each missing or unconfigured item:
 4. **Missing Company Capability Package** (required for point-code packaging, publish,
    verify-publication and online acceptance):
    - Ask the user to provide the ZIP path, then verify the SHA-256 as in step 1.4.
-   - Persist it once so later commands need no flag:
-     `python -m model_lab setup --models-root <external-private-dir> --company-iot-zip <ZIP> --apply`
-     which writes the path into the Git-ignored `.model-lab.local.json`. When the private
-     models root is not used on this machine, set the environment variable instead:
-     `setx MODEL_LAB_COMPANY_IOT_ZIP "<ZIP path>"` (new terminals pick it up).
+   - Persist it once with:
+     `setx MODEL_LAB_COMPANY_IOT_ZIP "<ZIP path>"` (new terminals pick it up),
+     or pass `doctor --company-package <ZIP>` for a one-off static check.
+     The framework does not copy or execute the archive during setup.
      The models root must be a directory outside this framework checkout: a path inside
      the checkout (including `models` and `models/_drafts`) fails with
      `models_root_inside_framework`. This framework checkout never stores private models.

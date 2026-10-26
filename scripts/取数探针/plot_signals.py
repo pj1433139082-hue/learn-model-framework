@@ -134,7 +134,8 @@ def main(argv=None) -> int:
         sys.exit("按 --start/--end 过滤后没有数据")
 
     want = [s.strip() for s in args.signals.split(",") if s.strip()]
-    cols = [c for c in df.columns if c != tcol]
+    time_columns = {"data_time_bj", "data_time_utc"}
+    cols = [c for c in df.columns if c not in time_columns]
     if want and want != ["all"]:
         cols = [c for c in cols if c.rsplit("-", 1)[-1] in want]
     if not cols:

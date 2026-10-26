@@ -376,7 +376,21 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _configure_utf8_stdio() -> None:
+    """Force UTF-8 output even when ``python -I`` ignores PYTHONUTF8 on Windows."""
+
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is None:
+            continue
+        try:
+            reconfigure(encoding="utf-8", errors="replace")
+        except (OSError, ValueError):
+            pass
+
+
 def main(arguments: Sequence[str] | None = None) -> int:
+    _configure_utf8_stdio()
     raw_arguments = tuple(arguments) if arguments is not None else tuple(sys.argv[1:])
     command = raw_arguments[0] if raw_arguments else None
     if sys.version_info[:2] != (3, 11) and command != "doctor":

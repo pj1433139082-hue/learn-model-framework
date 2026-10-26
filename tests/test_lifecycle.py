@@ -1319,6 +1319,25 @@ The source, notebook, tests, artifact digest and commands are recorded here.
             self.assertEqual(tree_bytes(workspace), before)
             self.assertEqual(lifecycle_state(workspace), "releasable")
 
+    def test_python_bytecode_cache_does_not_block_workspace_status(self) -> None:
+        """运行本机单测产生的 Python 缓存不应被 workspace-safe 当成模型产物。"""
+
+        with tempfile.TemporaryDirectory() as temporary:
+            workspace = create_workspace(Path(temporary) / "models")
+            cache = workspace / "src" / "__pycache__"
+            cache.mkdir(parents=True)
+            (cache / "model.cpython-311.pyc").write_bytes(b"bytecode")
+            pytest_cache = workspace / ".pytest_cache"
+            pytest_cache.mkdir()
+            (pytest_cache / "state").write_text("cache", encoding="utf-8")
+
+            status = workspace_status(workspace)
+            safety_gate = next(
+                gate for gate in status.gates if gate.gate_id == "workspace-safe"
+            )
+            self.assertTrue(safety_gate.passed, safety_gate.message)
+
+
     def test_current_workspace_secret_blocks_status_gate_and_advance(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             workspace = create_workspace(Path(temporary) / "models")

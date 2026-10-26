@@ -1338,6 +1338,22 @@ The source, notebook, tests, artifact digest and commands are recorded here.
             self.assertTrue(safety_gate.passed, safety_gate.message)
 
 
+
+    def test_off_flow_artifact_blocks_workspace_safe(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            workspace = create_workspace(Path(temporary) / "models")
+            tests = workspace / "tests"
+            tests.mkdir(exist_ok=True)
+            (tests / "test_model.py").write_text("def test_x():\n    assert True\n", encoding="utf-8")
+
+            status = workspace_status(workspace)
+            safety_gate = next(
+                gate for gate in status.gates if gate.gate_id == "workspace-safe"
+            )
+            self.assertFalse(safety_gate.passed)
+            self.assertIn("off_flow_artifact", safety_gate.message)
+            self.assertIn("model-lab status", status.next_command)
+
     def test_current_workspace_secret_blocks_status_gate_and_advance(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             workspace = create_workspace(Path(temporary) / "models")

@@ -32,9 +32,6 @@ states:
       - check: runtime-contract-valid
       - check: interaction-decisions-confirmed
         transition: built
-      - check: manifest-list-non-empty
-        paths: [artifacts]
-      - check: artifact-digests-recorded
       - check: paths-exist
         paths:
           - src/model.py

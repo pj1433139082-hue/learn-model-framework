@@ -562,6 +562,25 @@ class WorkspaceLifecycleTests(unittest.TestCase):
             self.assertEqual(tree_bytes(workspace), once_advanced)
             self.assertEqual(lifecycle_state(workspace), "specified")
 
+
+    def test_built_gate_does_not_require_bundle_artifacts(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            workspace = create_workspace(
+                Path(temporary) / "models",
+                "windows-design-reference",
+            )
+            complete_specification_evidence(workspace)
+            self.assertTrue(advance_workspace(workspace, apply=True).applied)
+
+            complete_build_evidence(workspace)
+            document = load_manifest(workspace)
+            document["artifacts"] = []
+            write_manifest(workspace, document)
+
+            built = advance_workspace(workspace, apply=True)
+            self.assertTrue(built.applied, built.as_dict())
+            self.assertEqual(lifecycle_state(workspace), "built")
+
     def test_complete_local_sop_reaches_releasable_and_builds_dry_run(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             workspace = create_workspace(

@@ -1,5 +1,7 @@
 # 模型实验室框架
 
+> 本仓的 `model_lab/**`、`tests/**`、`scripts/**` 是**剥离后的单向副本**，不是权威维护源。工具链缺陷先修私有源仓，再只搬差异；不要整文件覆盖式同步。
+
 同事克隆、更新本仓库的 `main` 即可。这里保存框架代码、技能、SOP、空模板和虚构测试；真实模型、厂站测点、数据、公司包及发布回执保存在仓库外私有目录。Python 使用 3.11。
 
 ## 首次使用
@@ -20,6 +22,8 @@ Linux 使用 `bash scripts/bootstrap.sh --models-root /path/to/private-models`�
 Codex 是否信任 hook 由客户端控制。初始化只报告 hook 文件和后备入口，不能代替客户端信任操作。如果 Skillshare 不可用，先直接读 `.skillshare/skills/model-lab-router/SKILL.md`；基础命令仍可使用。[手工配置与技能说明](docs/00-入口层/04-人工操作快速开始.md)
 
 ## 日常任务
+
+> `scripts/model-lab.ps1` 必须从框架根执行，或使用绝对路径；从上级目录用相对路径调用时，PowerShell 会在进入脚本前报 `-File ... 不存在` / exit 127。
 
 在本框架目录打开智能体，直接说：
 

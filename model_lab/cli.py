@@ -38,6 +38,8 @@ from model_lab.runtime_contract import (
     DEFAULT_RUNTIME_PROFILE_ID,
 )
 from model_lab.company_publish import PublishExecutionResult, publish_fixed_bundle, verify_existing_publication
+from model_lab.publication_import import PublicationImportError, import_group_publication
+from model_lab.input_contract import validate_inputs
 from model_lab.scaffolding import (
     ScaffoldReport,
     ScaffoldRequest,
@@ -301,6 +303,26 @@ def _build_parser() -> argparse.ArgumentParser:
         help="输出格式（默认：human）",
     )
 
+    input_check_parser = commands.add_parser(
+        "input-check", help="核对 inputs.md 的 IoT/化验/人工混合来源声明"
+    )
+    input_check_parser.add_argument("workspace", help="模型工作区路径")
+    input_check_parser.add_argument("--format", choices=("human", "json"), default="human")
+    publication_parser = commands.add_parser(
+        "publication", help="登记集团部署回执；只写本地回执，不执行上传"
+    )
+    publication_commands = publication_parser.add_subparsers(
+        dest="publication_command", required=True
+    )
+    publication_import_parser = publication_commands.add_parser(
+        "import", help="登记一个已验证的集团 Run 回执"
+    )
+    publication_import_parser.add_argument("workspace", help="模型工作区路径")
+    publication_import_parser.add_argument("--run-id", required=True, help="集团部署返回的 MLflow Run ID")
+    publication_import_parser.add_argument("--experiment", required=True, help="平台实验名")
+    publication_import_parser.add_argument("--company-package", required=True, help="集团 infra_model_deploy.zip")
+    publication_import_parser.add_argument("--deploy-kit", help="scripts/deploy-kit/<model-id> 目录；用于计算 kit SHA")
+    publication_import_parser.add_argument("--format", choices=("human", "json"), default="human")
     verify_publication_parser = commands.add_parser(
         "verify-publication", help="只读复核已有 MLflow Run；完全通过后补本地结构化回执"
     )
@@ -496,6 +518,36 @@ def main(arguments: Sequence[str] | None = None) -> int:
                     print(f"  - {doc}")
         return 3 if options.check and not valid else 0
 
+    if options.command == "input-check":
+        report = validate_inputs(options.workspace)
+        if options.format == "json":
+            print(json.dumps(report.as_dict(), ensure_ascii=False, sort_keys=True))
+        else:
+            print(f"input-check: {'PASS' if report.valid else 'FAIL'} ({report.rows} rows)")
+            for issue in report.issues:
+                print(f"- {issue.code} {issue.input_name}: {issue.detail}")
+        return 0 if report.valid else 1
+    if options.command == "publication":
+        if options.publication_command != "import":
+            parser.error(f"unsupported publication command: {options.publication_command}")
+        try:
+            result = import_group_publication(
+                options.workspace,
+                run_id=options.run_id,
+                experiment=options.experiment,
+                company_package=options.company_package,
+                deploy_kit=options.deploy_kit,
+            )
+        except (OSError, ValueError, PublicationImportError) as error:
+            code = getattr(error, "code", "publication_import_failed")
+            print(f"model-lab publication import: {code}: {error}", file=sys.stderr)
+            return 2
+        if options.format == "json":
+            print(json.dumps(result, ensure_ascii=False, sort_keys=True))
+        else:
+            print(f"publication import: {result['status']}")
+            print(f"receipt: {result['receipt']}")
+        return 0
     if options.command == "verify-publication":
         try:
             ensure_external_workspace(options.manifest)

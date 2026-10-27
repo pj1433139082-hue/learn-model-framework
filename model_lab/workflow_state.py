@@ -101,6 +101,7 @@ def _publication_state(workspace: Path, document: dict[str, Any], model: dict[st
                           if isinstance(item, dict) and item.get("kind") == "mlflow-pyfunc"), None) if isinstance(artifacts, list) else None
     receipt_dir = workspace / "validation" / "publications"
     accepted: list[tuple[str, str, dict[str, object], Path]] = []
+    group_accepted: list[tuple[str, str, dict[str, object], Path]] = []
     if receipt_dir.is_dir() and not is_link_or_junction(receipt_dir):
         for path in receipt_dir.glob("*.json"):
             if is_link_or_junction(path) or not _RUN_ID.fullmatch(path.stem):
@@ -112,6 +113,21 @@ def _publication_state(workspace: Path, document: dict[str, Any], model: dict[st
             if not isinstance(receipt, dict):
                 continue
             verification = receipt.get("verification")
+            if (
+                receipt.get("schema_version") == "1.1"
+                and receipt.get("channel") == "group"
+                and receipt.get("status") == "verified_group_receipt"
+                and receipt.get("model_id") == model.get("id")
+                and receipt.get("model_version") == model.get("version")
+                and receipt.get("run_id") == path.stem
+                and isinstance(receipt.get("experiment"), str)
+                and isinstance(receipt.get("company_package_sha256"), str)
+                and len(receipt["company_package_sha256"]) == 64
+                and isinstance(receipt.get("deploy_kit_sha256"), str)
+                and isinstance(receipt.get("verified_at_utc"), str)
+            ):
+                group_accepted.append((receipt["verified_at_utc"], path.stem, receipt, path))
+                continue
             if (
                 receipt.get("schema_version") == "1.0"
                 and receipt.get("status") == "verified"
@@ -125,6 +141,17 @@ def _publication_state(workspace: Path, document: dict[str, Any], model: dict[st
                         ("run_finished", "downloaded_digest_matched", "platform_predict_matched"))
             ):
                 accepted.append((str(receipt.get("verified_at_utc", "")), path.stem, receipt, path))
+    if group_accepted:
+        _, _, receipt, path = sorted(group_accepted)[-1]
+        return {
+            "status": "verified_group_receipt", "channel": "group",
+            "live_platform_status": "not_queried",
+            "experiment": receipt["experiment"], "run_id": receipt["run_id"],
+            "company_package_sha256": receipt["company_package_sha256"],
+            "deploy_kit_sha256": receipt["deploy_kit_sha256"],
+            "evidence": str(path.relative_to(workspace)).replace("\\", "/"),
+            "receipt_sha256": _text_digest(path),
+        }
     if accepted:
         _, _, receipt, path = sorted(accepted)[-1]
         return {

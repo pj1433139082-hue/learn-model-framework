@@ -6,6 +6,7 @@ states:
       - check: scaffold-metadata-valid
       - check: workspace-safe
       - check: manifest-valid
+      - check: mixed-inputs-declared
       - check: runtime-contract-valid
       - check: interaction-decisions-confirmed
         transition: specified

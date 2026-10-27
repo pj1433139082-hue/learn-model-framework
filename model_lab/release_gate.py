@@ -189,7 +189,7 @@ def off_flow_issues(workspace: str | Path, state: str) -> tuple[GateIssue, ...]:
                 found.append(GateIssue("off_flow_artifact", "notebooks/model.ipynb", "multi-cell notebook exists before the lifecycle gate"))
     if state in {"draft", "specified"} and (root / "release-bundle").is_dir():
         found.append(GateIssue("off_flow_artifact", "release-bundle/", "release bundle exists before the lifecycle gate"))
-    if state != "released" and (root / "validation" / "publications").is_dir():
+    if state in {"draft", "specified"} and (root / "validation" / "publications").is_dir():
         found.append(GateIssue("off_flow_artifact", "validation/publications/", "publication receipt exists before the lifecycle gate"))
     return tuple(found)
 

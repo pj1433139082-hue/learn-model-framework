@@ -321,7 +321,7 @@ def fetch_range(
     step_seconds: float = DEFAULT_STEP_SECONDS,
     window_hours: float = 0.0,
     max_size: int = 100000,
-    workers: int = 8,
+    workers: int = 32,
     retries: int = 4,
     probe: bool = True,
 ) -> Dict[str, Dict[int, Any]]:
@@ -336,7 +336,7 @@ def fetch_range(
     len(data["PS37217-02-BE_GFJF_0001-C_003_0001-V_IF"])
     ```
     """
-    from concurrent.futures import ThreadPoolExecutor
+    from concurrent.futures import ThreadPoolExecutor, as_completed
 
     start = ensure_bj(start)
     end = ensure_bj(end)
@@ -357,7 +357,8 @@ def fetch_range(
                     pool.submit(client.fetch_window, nodes, win, window, max_size, retries): win
                     for win in wins
                 }
-                for future, win in list(futures.items()):
+                for future in as_completed(futures):
+                    win = futures[future]
                     try:
                         results[win] = future.result()[1]
                     except Exception:  # noqa: BLE001

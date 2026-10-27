@@ -18,7 +18,7 @@ from typing import Any
 import yaml
 
 
-_RUN_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$")
+_RUN_ID = re.compile(r"^[0-9a-f]{32}$")
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
 
 
@@ -116,7 +116,9 @@ def import_group_publication(
             existing = json.loads(destination.read_text(encoding="utf-8"))
         except (OSError, UnicodeError, json.JSONDecodeError) as error:
             raise PublicationImportError("receipt_conflict", "existing receipt is not valid JSON") from error
-        if existing != receipt:
+        stable_existing = {key: value for key, value in existing.items() if key != "verified_at_utc"}
+        stable_receipt = {key: value for key, value in receipt.items() if key != "verified_at_utc"}
+        if stable_existing != stable_receipt:
             raise PublicationImportError("receipt_conflict", "existing receipt differs from this import")
         return {"status": "already_present", "receipt": str(destination.relative_to(workspace)), "run_id": run_id}
     destination.write_text(json.dumps(receipt, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")

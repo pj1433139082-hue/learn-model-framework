@@ -50,7 +50,7 @@ def _cells(line: str) -> list[str]:
         text = text[1:]
     if text.endswith("|"):
         text = text[:-1]
-    return [cell.strip() for cell in text.split("|")]
+    return [cell.strip().strip("`").strip() for cell in text.split("|")]
 
 
 def _is_separator(cells: list[str]) -> bool:

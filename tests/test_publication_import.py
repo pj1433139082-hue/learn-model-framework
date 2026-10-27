@@ -43,6 +43,13 @@ class PublicationImportTests(unittest.TestCase):
                 deploy_kit=kit,
             )
             receipt = json.loads((workspace / "validation" / "publications" / "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json").read_text(encoding="utf-8"))
+            again = import_group_publication(
+                workspace,
+                run_id="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                experiment="demo-experiment",
+                company_package=package,
+                deploy_kit=kit,
+            )
             publication = _publication_state(
                 workspace,
                 {"artifacts": []},
@@ -55,6 +62,7 @@ class PublicationImportTests(unittest.TestCase):
         self.assertEqual(len(receipt["company_package_sha256"]), 64)
         self.assertEqual(publication["status"], "verified_group_receipt")
         self.assertEqual(publication["run_id"], "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+        self.assertEqual(again["status"], "already_present")
 
 
 if __name__ == "__main__":

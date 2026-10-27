@@ -24,6 +24,7 @@ from model_lab.path_safety import (
     is_link_or_junction,
 )
 from model_lab.release_gate import off_flow_issues, scan_workspace_tree
+from model_lab.input_contract import validate_inputs
 from model_lab.runtime_contract import (
     RuntimeCheckReport,
     check_build_environment,
@@ -1038,6 +1039,22 @@ def _gate_workspace_safe(workspace: Path, document: Mapping[str, Any]) -> GateRe
     )
 
 
+
+
+def _gate_mixed_inputs(workspace: Path) -> GateResult:
+    report = validate_inputs(workspace)
+    if report.issues:
+        first = report.issues[0]
+        return GateResult(
+            "mixed-inputs-declared",
+            False,
+            f"{len(report.issues)} mixed-input issue(s); first is {first.code} at {first.input_name}: {first.detail}",
+        )
+    return GateResult(
+        "mixed-inputs-declared",
+        True,
+        f"inputs.md mixed-source declarations are valid ({report.rows} rows)",
+    )
 def _evaluate_gates(
     manifest: Path,
     document: Mapping[str, Any],
@@ -1055,6 +1072,8 @@ def _evaluate_gates(
         check = gate["check"]
         if check == "workspace-safe":
             results.append(_gate_workspace_safe(workspace, document))
+        elif check == "mixed-inputs-declared":
+            results.append(_gate_mixed_inputs(workspace))
         elif check == "scaffold-metadata-valid":
             results.append(_gate_scaffold_metadata_valid(workspace))
         elif check == "manifest-valid":

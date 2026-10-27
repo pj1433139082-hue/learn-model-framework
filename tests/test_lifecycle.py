@@ -1358,6 +1358,24 @@ The source, notebook, tests, artifact digest and commands are recorded here.
 
 
 
+
+    def test_mixed_input_declaration_blocks_status(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            workspace = create_workspace(Path(temporary) / "models")
+            (workspace / "inputs.md").write_text(
+                "| 输入 | 类型/单位 | 来源 | 供数方式 | 时间口径/质量 |\n"
+                "| --- | --- | --- | --- | --- |\n"
+                "| COD_in | mg/L | 化验 |  |  |\n",
+                encoding="utf-8",
+            )
+
+            status = workspace_status(workspace)
+            gate = next(
+                item for item in status.gates if item.gate_id == "mixed-inputs-declared"
+            )
+        self.assertFalse(gate.passed)
+        self.assertIn("non_iot_supply_missing", gate.message)
+
     def test_off_flow_artifact_blocks_workspace_safe(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             workspace = create_workspace(Path(temporary) / "models")

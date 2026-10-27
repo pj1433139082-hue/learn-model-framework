@@ -59,7 +59,7 @@ DEFAULT_API_URL = "https://be-iot-saas.bewg.net.cn/ts/v3/datapoint/history/rawva
 DEFAULT_CLIENT_ID = "ai-console"
 DEFAULT_TENANT = "bewg"
 DEFAULT_SIGNALS = "V_IF,V_OP,V_P,V_ITIT,V_I,S_RUN"
-DEFAULT_WORKERS = 32
+DEFAULT_WORKERS = 16
 DEFAULT_RETRIES = 4
 DEFAULT_STEP_SECONDS = 15.0
 

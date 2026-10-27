@@ -269,7 +269,7 @@ class CliDefaultsTest(unittest.TestCase):
         self.assertEqual(args.start, "")
         self.assertEqual(args.end, "")
         self.assertEqual(args.out, "raw")
-        self.assertEqual(args.workers, 32)
+        self.assertEqual(args.workers, 16)
         self.assertEqual(args.window_hours, 0.0)
         self.assertEqual(args.max_size, 0)
         self.assertEqual(args.retries, 4)

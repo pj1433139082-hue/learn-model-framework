@@ -10,7 +10,7 @@
 
 * **要任意历史区间的数据**：平台 3.11 密文 SDK 没有 `end_time`、每查询硬编码 1500 条、串行；
   这里直接调 REST 接口，`startTime/endTime/maxSizePerNode` 都是请求体字段，区间可精确指定。
-* **要几个月的训练数据**：按月落 parquet，自动逐月探"每测点上限"再选窗口，32 并发实测约 72 万采样点/秒。
+* **要几个月的训练数据**：按月落 parquet，自动逐月探"每测点上限"再选窗口，默认 16 并发；实测 16/32 正常速度接近，32/48 更容易触发 WAF 抖动，失败窗重排反而更慢。
 * **要把这套能力搬到别的项目**：包只认环境变量里的端点和凭据，不认本仓库路径；`examples/` 里有
   可直接改的脚本。
 
@@ -182,7 +182,7 @@ python -m iot_fetch --factory-code PS37217-02 `
   --machine-prefix "-BE_GFJF_0001-C_003_" --machine 0001,0002,0003 `
   --signals V_IF,V_OP,V_P `
   --start 2026-01-01 --end "2026-04-01 00:00" `
-  --out raw --workers 32
+  --out raw --workers 16
 ```
 
 产物：`raw/PS37217-02-202601.parquet`、`-202602.parquet`、`-202603.parquet`。
@@ -226,7 +226,7 @@ python -m iot_fetch ledger --ledger "data/台账/PS37217-02-自控信号台账-x
 | `--start` | 空 = 结束前 30 天 | `YYYY-MM-DD` 或 `YYYY-MM-DD HH:MM`（北京时间） |
 | `--end` | 空 = 现在 | 同上 |
 | `--out` | `raw` | 输出目录（每月一厂一个文件） |
-| `--workers` | `32` | 并发窗口数（实测 32 稳定） |
+| `--workers` | `16` | 并发窗口数（默认 16 更稳；32/48 可显式尝试） |
 | `--window-hours` | `0` | `0`=按探针自动；`>0` 强制窗口并**完全跳过**探针 |
 | `--max-size` | `0` | `0`=按探针；`>0` 强制 `maxSizePerNode`（跳过初始探针） |
 | `--retries` | `4` | 单窗口失败重试次数 |

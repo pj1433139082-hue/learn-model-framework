@@ -44,7 +44,7 @@ class FetchOptions:
     end: datetime
     factory: str
     out_dir: Path = Path("raw")
-    workers: int = 32
+    workers: int = 16
     window_hours: float = 0.0
     max_size: int = 0
     retries: int = 4
@@ -321,7 +321,7 @@ def fetch_range(
     step_seconds: float = DEFAULT_STEP_SECONDS,
     window_hours: float = 0.0,
     max_size: int = 100000,
-    workers: int = 32,
+    workers: int = 16,
     retries: int = 4,
     probe: bool = True,
 ) -> Dict[str, Dict[int, Any]]:

@@ -1,0 +1,4 @@
+interface:
+  display_name: "AILab Model Release"
+  short_description: "Model version update and release on Beikong ailab"
+  default_prompt: "Run the ailab-model-release skill to update, create, or publish a model version on the Beikong ailab platform."

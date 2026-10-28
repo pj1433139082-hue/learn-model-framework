@@ -147,3 +147,13 @@ const dlg = [...document.querySelectorAll(".el-dialog")].filter(visible).pop();
 选 Run → 切换部署文件 → 确定选择 → 同步后读到：输入 **18** 项（`factory_code`/`start_time` = string，
 16 个测点 = array，`hasAny=false`），输出 **7** 项（`unit`/`data_time` = string，四列 double，`quality` string）。
 全程未点保存 / 发布 / 部署。
+
+## 「发布」菜单项点了没反应（2026-10-29 00:52 实测）
+
+- 行尾「更多」展开后菜单是：训练指南 / 试用 / 训练记录 / **发布** / 部署 / 版本管理 / 删除。
+- 「发布」的坐标拿得到（2182, 419）、鼠标点击与 `ArrowDown×4 + Enter` 都发得出去，
+  但**没有任何反应**：无弹窗、无 toast、路由不变、没有新标签页。
+- 同一时刻「版本管理 / 另存为新版本 / 保存并继续」都是好的（保存后 toast「操作成功」，V002 出现在版本管理里）。
+- 结论：发布这条**必须先人工点一次**确认交互形态（可能需要勾选行、或走审批），脚本抛 `E_PUBLISH_UNRESPONSIVE` 交回人工，
+  不要重试到超时。
+- 「保存并继续」是可以脚本化的：DOM `click()` 就生效，判据是 toast「操作成功」+ 抽屉关闭。

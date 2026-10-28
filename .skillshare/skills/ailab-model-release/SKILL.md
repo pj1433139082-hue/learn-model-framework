@@ -48,6 +48,7 @@ description: 在北控 ailab 模型实验室平台（ailab.bewg.net.cn）完成�
 | `<skill>/scripts/ailab-version.mjs` | `AILAB_MODEL`；`AILAB_ACTION`（menu / save-as-new / update）；`AILAB_PAGE` | 点「版本管理」，再点「另存为新版本」或「版本更新」，打印表单与必填缺口 |
 | `<skill>/scripts/ailab-bind-run.mjs` | `AILAB_RUN`（必填）；`AILAB_PAGE`；可选 `AILAB_EXPECT_ARRAYS` | 切换部署文件 → 选 Run → 确定选择 → 同步参数 → 判定签名是否变化 |
 | `<skill>/scripts/ailab-read-params.mjs` | `AILAB_PAGE`；可选 `AILAB_EXPECT_ARRAYS` `AILAB_EXPECT_STRINGS` | 只读：当前关联部署 + 参数表 + 类型统计（array/string/double/any） |
+| `<skill>/scripts/ailab-save-publish.mjs` | `__AILAB_SAVE_ARGS__={publish:true}` | 点「保存并继续」（**已实测可用**，判据 toast「操作成功」+抽屉关闭）→ 再点「发布」（当前平台点了无反应，抛 `E_PUBLISH_UNRESPONSIVE` 交回人工） |
 | `<skill>/scripts/ailab-run-update-version.mjs` | `AILAB_MODEL` `AILAB_RUN`；可选 `AILAB_ALIAS` | 一条命令串起 open → save-as-new → bind-run → read-params，默认 dry-run，不点保存/发布 |
 | `<skill>/scripts/lib/` | — | 六个可复用模块：`page` `menu` `select` `dialog` `table` `toast`（另含 `form` `dom` `params` `errors` `constants` `index`）；10 条坑的可跑实现都在这里 |
 | `<skill>/scripts/ailab-new-model.mjs` | `AILAB_NAME` `AILAB_ALIAS` `AILAB_DESC`；`AILAB_PAGE` | 打开「新建模型」表单、填文本字段、列出仍待补的必填项 |
